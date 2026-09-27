@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>한글 자음 모음 학습하기</title>
+<meta name="description" content="자음 19개와 단모음 10개를 카드 게임으로 익히는 국어 음운 학습 프로그램">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap">
+<style>
+:root{
+  --bg:#1C2233; --panel:#242C44; --panel2:#111623; --ink:#FFFFFF; --sub:#AEB6C8; --line:#37415F;
+  --accent:#F07A2B; --accent-d:#D2601A; --accent-soft:rgba(240,122,43,.16);
+  --vow:#2F7FD8; --vow-d:#1B5BA6; --vow-l:#5FA2EC;
+  --warn:#FF8A7A; --good:#6FD39A; --card-ink:#1C2233;
+  --r:16px;
+  --disp:"Do Hyeon","Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  font-size:17px; line-height:1.6; -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:720px;margin:0 auto;padding:16px 16px 56px}
+h1,h2,h3{line-height:1.3;margin:0 0 12px;font-family:var(--disp);font-weight:400}
+h1{font-size:1.7rem}
+h2{font-size:1.45rem}
+h3{font-size:1.2rem}
+p{margin:0 0 10px}
+b{color:#FFD3B3}
+.muted{color:var(--sub);font-size:.88rem}
+.muted b{color:#FFFFFF}
+.screen{display:none}
+.screen.on{display:block}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:10px 16px;background:var(--panel2);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20}
+.topbar strong{font-family:var(--disp);font-weight:400;font-size:1.15rem;letter-spacing:.02em}
+.topbar .who{font-size:.9rem;color:var(--sub)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
+
+button{font:inherit;cursor:pointer;border-radius:12px;border:1px solid var(--line);
+  background:#2E3756;color:var(--ink);padding:12px 16px;min-height:48px}
+button:active{transform:translateY(1px)}
+button:disabled{cursor:default}
+.btn-main{background:var(--accent-d);border-color:var(--accent-d);color:#fff;
+  font-family:var(--disp);font-size:1.2rem;box-shadow:0 4px 0 #9E4610}
+.btn-main:disabled{background:#2E3756;border-color:#2E3756;color:#8E97AE;box-shadow:none;font-family:inherit;font-size:1rem}
+.btn-ghost{background:transparent}
+.btn-sm{min-height:38px;padding:7px 12px;font-size:.88rem}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row.end{justify-content:flex-end}
+.stack{display:flex;flex-direction:column;gap:8px}
+input[type=text],input[type=password],input[type=tel],select{
+  font:inherit;padding:12px;border:1.5px solid var(--line);border-radius:12px;
+  background:var(--panel2);color:var(--ink);width:100%;min-height:48px}
+input:focus{outline:none;border-color:var(--accent)}
+input::placeholder{color:#6B7490}
+label{display:block;font-size:.9rem;color:var(--sub);margin-bottom:4px}
+
+/* 단계 목록 */
+.stage-list{display:grid;gap:10px}
+.stage-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 16px;
+  background:var(--panel);border:0;border-radius:14px;box-shadow:inset 0 0 0 1px var(--line)}
+.stage-item .nm{flex:1;font-family:var(--disp);font-size:1.15rem;font-weight:400}
+.badge{font-size:.78rem;padding:4px 10px;border-radius:999px;background:#2E3756;color:var(--sub);white-space:nowrap}
+.badge.pass{background:var(--accent-soft);color:#FFB27A;font-weight:600}
+.sec-title{font-size:.82rem;color:var(--sub);margin:14px 0 6px;letter-spacing:.04em}
+.stage-item .nm .sub{display:block;font-family:"Pretendard","Malgun Gothic",sans-serif;font-size:.8rem;color:var(--sub);margin-top:2px}
+.unitchk{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1.5px solid var(--line);
+  border-radius:12px;background:var(--panel2);cursor:pointer;font-size:.96rem;min-height:48px;color:var(--ink)}
+.unitchk.on{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.unitchk input{width:22px;height:22px;min-height:0;flex:none;accent-color:var(--accent)}
+.unitchk .ul{flex:1}
+
+/* ===== 자모 카드 ===== */
+.card-area{perspective:1200px;margin:6px 0 16px;display:flex;justify-content:center}
+.card{position:relative;width:176px;height:256px;flex:none;transition:transform .45s;transform-style:preserve-3d}
+.card.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:18px}
+.face.front{background:var(--accent);padding:12px;display:flex;flex-direction:column;gap:8px;
+  box-shadow:0 0 0 3px #fff,0 14px 30px rgba(0,0,0,.45)}
+.card.vow .face.front{background:var(--vow)}
+.jc-top{display:flex;justify-content:flex-end}
+.jc-pill{font-size:.72rem;font-weight:700;color:#fff;background:#B8520F;border-radius:999px;padding:2px 10px;line-height:1.6}
+.card.vow .jc-pill{background:var(--vow-d)}
+.jc-win{flex:1;background:#fff;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  background-image:radial-gradient(#F6D9C4 1.5px,transparent 1.5px);background-size:12px 12px}
+.card.vow .jc-win{background-image:radial-gradient(#CFE1F6 1.5px,transparent 1.5px)}
+.jamo{font-family:var(--disp);font-size:6.2rem;line-height:1;color:var(--card-ink)}
+.jc-name{font-family:var(--disp);font-size:1.45rem;line-height:1;text-align:center;color:#fff}
+.face.back{transform:rotateY(180deg);background:#fff;color:var(--card-ink);overflow:hidden;
+  display:flex;flex-direction:column;box-shadow:0 0 0 3px var(--accent),0 14px 30px rgba(0,0,0,.45)}
+.card.vow .face.back{box-shadow:0 0 0 3px var(--vow),0 14px 30px rgba(0,0,0,.45)}
+.bk-head{background:var(--accent);padding:9px 12px;display:flex;align-items:center;gap:9px}
+.card.vow .bk-head{background:var(--vow)}
+.bk-ch{width:38px;height:38px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:var(--disp);font-size:1.7rem;line-height:1;color:var(--card-ink)}
+.bk-nm{font-family:var(--disp);font-size:1.35rem;color:#fff;line-height:1}
+.bk-rows{flex:1;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:8px}
+.feat{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:10px;text-align:left}
+.feat.hl{background:#FFF0E4}
+.card.vow .feat.hl{background:#E6F0FC}
+.feat .ic{width:28px;height:28px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.feat .ic svg{width:15px;height:15px}
+.feat .ic.a0{background:#13866F}.feat .ic.a1{background:#6A4BD0}.feat .ic.a2{background:#C8323A}
+.feat .fl{display:block;font-size:.66rem;color:#5B6478;line-height:1.2}
+.feat .fv{display:block;font-family:var(--disp);font-size:1.02rem;line-height:1.15}
+.feat .fv small{font-family:"Pretendard","Malgun Gothic",sans-serif;font-size:.62rem;color:#5B6478;margin-left:3px}
+.card.big{width:220px;height:320px}
+.card.big .jamo{font-size:8rem}
+.card.big .feat .fv{font-size:1.2rem}
+.card.big .feat .fl{font-size:.74rem}
+
+.qtext{font-family:var(--disp);font-size:1.5rem;line-height:1.3;text-align:center;margin:0 0 6px}
+.qtext b{color:#FFB27A;font-weight:400}
+.qsub{text-align:center;font-size:.85rem;color:#8E97AE;margin-bottom:6px}
+
+/* 3단계: 카드 + 빈칸 */
+.tri-top{display:flex;align-items:center;justify-content:center;gap:16px;margin:6px 0 12px}
+.tri-top .card-area{margin:0}
+.tri-top .card{width:138px;height:200px}
+.tri-top .jamo{font-size:4.6rem}
+.tri-top .jc-name{font-size:1.2rem}
+.tri-top .feat .fv{font-size:.9rem}
+.tri-top .feat .ic{width:22px;height:22px}
+.slots{flex:1;max-width:260px;display:flex;flex-direction:column;gap:8px}
+.slot{height:56px;border-radius:12px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+  padding:0 12px;text-align:left;border:2px dashed #3A4460;background:transparent;min-height:0}
+.slot .sl-lab{font-size:.7rem;color:#8E97AE;line-height:1.3}
+.slot .sl-val{font-size:.82rem;color:#5B6478;line-height:1.3}
+.slot.cur{border-color:var(--accent);background:#1F2436}
+.slot.cur .sl-lab{color:#FFB27A;font-weight:600}
+.slot.cur .sl-val{color:var(--sub)}
+.slot.fill{border:0;background:var(--accent)}
+.slot.fill .sl-lab{color:#FFE6D4}
+.slot.fill .sl-val{font-family:var(--disp);font-size:1.2rem;color:#fff;line-height:1.15}
+.slot.fill.cur{box-shadow:0 0 0 2px #fff}
+.vowq .slot.cur{border-color:var(--vow-l)}
+.vowq .slot.cur .sl-lab{color:#8DBDF2}
+.vowq .slot.fill{background:var(--vow)}
+.vowq .slot.fill .sl-lab{color:#D9E8FA}
+.tabs{display:flex;gap:6px;margin:4px 0 0}
+.tab{flex:1 1 0;min-height:44px;padding:6px;border-radius:10px;font-size:.9rem;font-weight:600;
+  background:transparent;border:1.5px solid #3A4460;color:#8E97AE;display:flex;align-items:center;justify-content:center;gap:5px}
+.tab.done{background:#2E3756;border-color:#2E3756;color:#fff}
+.tab.on{background:#fff;border-color:#fff;color:var(--card-ink);font-weight:700}
+.tab svg{width:14px;height:14px}
+
+/* 손패 (선택지 카드) */
+.hand{position:relative;height:200px;margin:4px 0 0;user-select:none;-webkit-user-select:none}
+.hcard{position:absolute;top:0;left:0;width:92px;height:130px;padding:6px;border:0;border-radius:12px;
+  background:#fff;color:var(--card-ink);box-shadow:0 8px 18px rgba(0,0,0,.45);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  transform-origin:50% 100%;transform:translateY(var(--y,0px)) rotate(var(--r,0deg));
+  transition:transform .16s ease, box-shadow .16s ease;word-break:keep-all;text-align:center;min-height:0}
+.hcard:hover,.hcard:focus-visible{outline:none;transform:translateY(calc(var(--y,0px) - 10px)) rotate(var(--r,0deg));z-index:5}
+.hcard.sel{transform:translateY(calc(var(--y,0px) - 18px)) rotate(var(--r,0deg));
+  box-shadow:0 0 0 3px var(--accent),0 14px 24px rgba(0,0,0,.5);z-index:6}
+.vowq .hcard.sel{box-shadow:0 0 0 3px var(--vow-l),0 14px 24px rgba(0,0,0,.5)}
+.hcard .hm{font-family:var(--disp);font-size:1.25rem;line-height:1.15}
+.hcard .hs{font-size:.68rem;color:#5B6478;line-height:1.2}
+.hcard.jm .hm{font-size:2.8rem;line-height:1}
+.hcard.txt .hm{font-size:1.05rem}
+.hand.done .hcard{cursor:default}
+.hand.done .hcard:not(.sel){background:#B9BFCD;color:#4A5268;box-shadow:0 6px 14px rgba(0,0,0,.35)}
+.hand.done .hcard:not(.sel) .hs{color:#4A5268}
+.hand.narrow .hcard{padding:4px 3px}
+.hand.narrow .hcard .hm{font-size:1.05rem}
+.hand.narrow .hcard.txt .hm{font-size:.92rem}
+.hand.narrow .hcard.jm .hm{font-size:2.3rem}
+.hcard .hs{word-break:break-all}
+.tri-top .feat .fv small{display:none}
+.opt{padding:14px 10px;text-align:center}
+.opt.sel{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.attrblock{margin-bottom:14px}
+.attrblock > .lab{font-size:.9rem;font-weight:600;margin-bottom:6px}
+.revbox{background:var(--panel2);border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 0 12px}
+.revbox .feat{padding:3px 0}
+.revbox .fl{color:var(--sub)}
+.revbox .fv{color:#fff;font-size:1.15rem}
+
+/* 문제 고정 영역 (스크롤해도 문제가 계속 보이도록) */
+#q-fixed{
+  position:sticky; top:var(--topbar-h,48px); z-index:12;
+  background:var(--panel); margin:0 -16px; padding:0 16px;
+  transition:padding .18s ease;
+}
+#q-fixed.stuck{
+  padding-top:8px; padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+  box-shadow:0 8px 10px -9px rgba(0,0,0,.6);
+}
+#q-fixed.stuck .card-area{margin:0 0 6px}
+#q-fixed.stuck .card{width:60px;height:84px}
+#q-fixed.stuck .face.front{padding:5px;gap:0;border-radius:10px;box-shadow:0 0 0 2px #fff}
+#q-fixed.stuck .jc-top,#q-fixed.stuck .jc-name{display:none}
+#q-fixed.stuck .jc-win{border-radius:7px}
+#q-fixed.stuck .jamo{font-size:2.4rem}
+#q-fixed.stuck .tri-top{margin:0 0 4px}
+#q-fixed.stuck .slot{height:40px}
+#q-fixed.stuck .slot .sl-lab{display:none}
+#q-fixed.stuck .qtext{font-size:1.1rem;margin-bottom:0}
+@media (prefers-reduced-motion:reduce){ #q-fixed{transition:none} .hcard{transition:none} .card{transition:none} }
+
+.hint{background:#3A3322;border:1px solid #6B5A2A;border-radius:12px;padding:12px;margin:10px 0;color:#FFF3D6}
+.hint .h-lab{font-size:.78rem;color:#FFC857;font-weight:700;margin-bottom:3px}
+.flash{border-radius:12px;padding:12px;margin:10px 0;font-weight:600;text-align:center}
+.flash.bad{background:#3B2327;border:1px solid #7A3A3F;color:var(--warn)}
+.flash.near{background:#3A3322;border:1px solid #6B5A2A;color:#FFC857}
+.flash.good{background:#1E3A2E;border:1px solid #2F6B4E;color:var(--good)}
+
+.bar{height:7px;background:#2E3756;border-radius:999px;overflow:hidden;margin:8px 0 4px}
+.bar > i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.metrics{display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:.85rem;color:var(--sub)}
+#m-stage{font-family:var(--disp);font-size:1.05rem;color:#fff;flex:1 1 100%}
+#m-count,#m-acc,#ex-count,#fc-count{background:#2E3756;border-radius:999px;padding:3px 11px;color:#fff}
+#m-acc:empty{display:none}
+
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th,td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top}
+th{color:var(--sub);font-weight:600;font-size:.82rem}
+td.c,th.c{text-align:center}
+.scroll{overflow-x:auto}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(8,10,18,.7);z-index:50;
+  align-items:center;justify-content:center;padding:20px}
+.modal-bg.on{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px;max-width:420px;width:100%}
+
+.ox{display:flex;gap:8px}
+.ox button{flex:1;font-size:1.1rem;font-weight:700}
+.ox button.o.on{background:#1E3A2E;border-color:var(--good);color:var(--good)}
+.ox button.x.on{background:#3B2327;border-color:var(--warn);color:var(--warn)}
+.examrow{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.examrow .lab{width:120px;font-size:.9rem;font-weight:600}
+.note{font-size:.8rem;color:var(--sub);margin-top:4px}
+ul{margin:0 0 10px;padding-left:20px}
+li{margin-bottom:4px}
+.jamo.sm{font-size:2.6rem;color:#fff}
+
+/* ===== 오프닝 화면 (v7) ===== */
+body{word-break:keep-all}
+body.opening .topbar{display:none}
+body.opening .wrap{max-width:none;padding:0}
+.op{position:relative;min-height:100vh;min-height:100dvh;overflow:hidden;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:56px 20px 110px}
+.op-pattern{position:absolute;inset:-60px;font-family:var(--disp);font-size:26px;line-height:44px;
+  letter-spacing:18px;color:rgba(255,255,255,.045);word-break:break-all;transform:rotate(-10deg);
+  pointer-events:none;user-select:none}
+.op-main{position:relative;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;width:100%;max-width:960px;word-break:keep-all}
+.op-pill{font-size:.88rem;font-weight:600;color:#FFC857;background:rgba(255,200,87,.12);
+  border:1px solid rgba(255,200,87,.4);border-radius:999px;padding:5px 14px}
+.op-title{margin:0;font-family:var(--disp);font-weight:400;font-size:clamp(42px,7.4vw,70px);line-height:1.08;letter-spacing:.01em;color:#fff}
+.op-sub{margin:0;font-size:clamp(14px,1.9vw,18px);line-height:1.5;color:var(--sub)}
+.op-br{display:none}
+.op-fan{--cw:76px;--step:42px;position:relative;margin-top:14px;
+  width:calc(var(--cw) + var(--step)*5);height:calc(var(--cw)*1.45 + 44px)}
+.op-card{position:absolute;top:var(--t);left:calc(var(--step)*var(--i));width:var(--cw);height:calc(var(--cw)*1.45);
+  font-size:calc(var(--cw)/7.75);box-sizing:border-box;border-radius:1.1em;padding:.5em;
+  display:flex;flex-direction:column;gap:.4em;color:#fff;
+  transform:rotate(var(--r));transform-origin:50% 100%;
+  box-shadow:0 0 0 max(2px,.2em) #fff,0 .8em 1.6em rgba(0,0,0,.45);
+  animation:opIn .55s cubic-bezier(.2,.8,.3,1.2) both;animation-delay:calc(var(--i)*70ms)}
+.op-card.c{background:var(--accent)} .op-card.v{background:var(--vow)}
+.op-card .tg{align-self:flex-end;font-size:.62em;font-weight:700;border-radius:999px;padding:.2em .7em;line-height:1.4}
+.op-card.c .tg{background:#B8520F} .op-card.v .tg{background:var(--vow-d)}
+.op-card .jm{flex:1;background:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:var(--disp);font-size:4.4em;line-height:1;color:var(--card-ink);background-size:12px 12px;border-radius:calc(var(--cw)*.09)}
+.op-card.c .jm{background-image:radial-gradient(#F6D9C4 1.5px,transparent 1.5px)}
+.op-card.v .jm{background-image:radial-gradient(#CFE1F6 1.5px,transparent 1.5px)}
+.op-card .nm{font-family:var(--disp);font-size:1.15em;line-height:1;text-align:center;padding-bottom:.15em}
+@keyframes opIn{from{opacity:0;transform:translateY(30px) rotate(0deg)}}
+.op-start{margin-top:10px;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;max-width:260px;min-height:58px;border:0;border-radius:16px;background:#FFC857;color:var(--card-ink);
+  font-family:var(--disp);font-size:1.6rem;box-shadow:0 6px 0 #C9912A,0 14px 26px rgba(0,0,0,.4)}
+.op-start:hover{background:#FFD47A}
+.op-start:focus-visible{outline:3px solid #fff;outline-offset:4px}
+.op-start svg{width:22px;height:22px}
+.op-credit{position:absolute;right:24px;bottom:20px;display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
+.op-credit span{font-size:.85rem;color:#C7CEDD}
+.op-credit span+span{font-size:.8rem;color:#8E97AE}
+.op-credit b{color:#fff;font-weight:600}
+.op-lic{margin-top:4px;font-size:.72rem;color:#8E97AE;text-decoration:none;border-bottom:1px dotted #5B6478}
+.op-lic:hover{color:#C7CEDD}
+@media (max-width:639px){
+  .op-br{display:inline}
+  .op-main{gap:16px}
+  .op-start{max-width:none}
+  .op-credit{right:20px;bottom:18px}
+  .op-credit span{font-size:.75rem} .op-credit span+span{font-size:.72rem}
+}
+@media (max-width:359px){ .op-fan{--cw:68px;--step:37px} }
+@media (min-width:640px){ .op-fan{--cw:124px;--step:100px} }
+@media (min-width:640px) and (max-height:700px){ .op-fan{--cw:104px;--step:84px} .op{padding-top:40px} }
+@media (prefers-reduced-motion:reduce){ .op-card{animation:none} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <strong style="font-size:.98rem">한글 자음 모음 학습하기</strong>
+  <span class="who" id="who"></span>
+</div>
+
+<div class="wrap">
+
+<!-- ========== 오프닝 (v7) ========== -->
+<section id="s-open" class="screen on">
+  <div class="op">
+    <div class="op-pattern" aria-hidden="true">ㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡㄱㅏㄴㅐㄷㅓㄹㅔㅁㅗㅂㅚㅅㅜㅇㅟㅈㅡㅊㅣㅋㅏㅌㅐㅍㅓㅎㅔㄲㅗㄸㅚㅃㅜㅆㅟㅉㅡ</div>
+    <div class="op-main">
+      <span class="op-pill">자음 19장 · 모음 10장 · 5단계 + 시험</span>
+      <h1 class="op-title">한글 자음 모음 <br class="op-br">학습하기</h1>
+      <p class="op-sub">카드를 한 장씩 맞히며 <br class="op-br">자음과 모음의 소리를 익혀 보세요</p>
+      <div class="op-fan" role="img" aria-label="한글 자모 카드: ㅎ ㅏ ㄴ ㄱ ㅡ ㄹ">
+      <div class="op-card c" style="--i:0;--r:-20deg;--t:44px;z-index:5"><span class="tg">자음</span><span class="jm">ㅎ</span><span class="nm">히읗</span></div>
+      <div class="op-card v" style="--i:1;--r:-12deg;--t:18px;z-index:7"><span class="tg">모음</span><span class="jm">ㅏ</span><span class="nm">아</span></div>
+      <div class="op-card c" style="--i:2;--r:-4deg;--t:4px;z-index:9"><span class="tg">자음</span><span class="jm">ㄴ</span><span class="nm">니은</span></div>
+      <div class="op-card c" style="--i:3;--r:4deg;--t:4px;z-index:9"><span class="tg">자음</span><span class="jm">ㄱ</span><span class="nm">기역</span></div>
+      <div class="op-card v" style="--i:4;--r:12deg;--t:18px;z-index:7"><span class="tg">모음</span><span class="jm">ㅡ</span><span class="nm">으</span></div>
+      <div class="op-card c" style="--i:5;--r:20deg;--t:44px;z-index:5"><span class="tg">자음</span><span class="jm">ㄹ</span><span class="nm">리을</span></div>
+      </div>
+      <button class="op-start" id="btn-open-start"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4 L20 12 L7 20 Z"/></svg>게임 시작</button>
+    </div>
+    <div class="op-credit">
+      <span>만든 이: <b>ferdie_of_books</b></span>
+      <span>메일 주소: nobeatd@gmail.com</span>
+      <a class="op-lic" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.ko" target="_blank" rel="license noopener">CC BY-NC-SA 4.0 · 비영리 교육 목적으로 자유롭게 사용</a>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 홈 ========== -->
+<section id="s-home" class="screen">
+  <div class="sec-title">학습 단계</div>
+  <div class="stage-list" id="list-main"></div>
+  <div class="sec-title">평가</div>
+  <div class="stage-list" id="list-x"></div>
+  <div class="panel" style="margin-top:16px">
+    <p class="muted">전설·후설모음 목록은 「자음 모음 탐구」 원문에 없어 학교 문법 표준으로 보충한 부분입니다.</p>
+    <p class="muted">학습 기록은 지금 쓰는 기기의 브라우저에만 저장됩니다.</p>
+    <div class="row">
+      <button class="btn-ghost btn-sm" id="btn-opening">처음 화면으로</button>
+      <button class="btn-ghost btn-sm" id="btn-reset">학습 기록 지우기</button>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 단계 시작 설정 ========== -->
+<section id="s-setup" class="screen">
+  <div class="panel">
+    <h2 id="setup-title"></h2>
+    <p class="muted" id="setup-desc"></p>
+    <div id="box-units" style="margin:16px 0">
+      <label>무엇을 연습할까요?</label>
+      <div class="stack" id="unit-opts"></div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn-ghost btn-sm" id="btn-all">전체 선택</button>
+        <button class="btn-ghost btn-sm" id="btn-none">전체 해제</button>
+      </div>
+      <div class="note">처음에는 전부 선택되어 있습니다. 집중해서 익히고 싶은 것만 남겨도 됩니다. 여러 개를 고르면 섞여서 나옵니다.</div>
+    </div>
+    <div style="margin:16px 0" id="box-size">
+      <label>몇 문제를 맞힐 때까지 공부할까요?</label>
+      <div class="row" id="size-opts"></div>
+      <div class="note">맞힌 문제만 셉니다. 틀린 문제는 나중에 다시 나와요.</div>
+    </div>
+    <div id="setup-msg" class="flash bad" style="display:none"></div>
+    <div class="row" style="margin-top:18px">
+      <button class="btn-main" id="btn-start" style="flex:1">시작하기</button>
+      <button class="btn-ghost" id="btn-flash">카드 넘겨보기</button>
+    </div>
+    <div class="row" style="margin-top:8px"><button class="btn-ghost btn-sm" onclick="go('s-home')">← 돌아가기</button></div>
+  </div>
+</section>
+
+<!-- ========== 카드 넘겨보기 ========== -->
+<section id="s-flash" class="screen">
+  <div class="panel">
+    <h3 id="flash-title"></h3>
+    <p class="muted">카드를 눌러 뒤집어 보세요.</p>
+    <div class="card-area"><div class="card big" id="fcard" onclick="this.classList.toggle('flip')"></div></div>
+    <div class="row">
+      <button style="flex:1" id="fc-prev">← 이전</button>
+      <button style="flex:1" id="fc-next">다음 →</button>
+    </div>
+    <div class="metrics" style="margin-top:10px"><span id="fc-count"></span></div>
+    <div class="row" style="margin-top:12px"><button class="btn-ghost btn-sm" id="fc-back-btn">← 돌아가기</button></div>
+  </div>
+</section>
+
+<!-- ========== 1단계 설명 ========== -->
+<section id="s-concept" class="screen">
+  <div class="panel" id="concept-body"></div>
+  <div class="row">
+    <button class="btn-ghost" id="cp-prev">← 이전</button>
+    <button class="btn-main" style="flex:1" id="cp-next">다음 →</button>
+  </div>
+</section>
+
+<!-- ========== 학습 ========== -->
+<section id="s-learn" class="screen">
+  <div class="panel">
+    <div class="metrics">
+      <span id="m-stage"></span><span id="m-count"></span><span id="m-acc"></span>
+    </div>
+    <div class="bar"><i id="m-bar"></i></div>
+  </div>
+
+  <div class="panel">
+    <div id="q-fixed">
+      <div id="q-card-area"></div>
+      <div class="qtext" id="q-text"></div>
+    </div>
+    <div id="q-body"></div>
+    <div id="q-flash"></div>
+    <div id="q-hint"></div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn-main" id="btn-submit" style="flex:1">확인</button>
+      <button class="btn-ghost" id="btn-next-q" style="flex:1;display:none">다음 문제 →</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn-ghost btn-sm" id="btn-park" style="display:none">잠시 쉬어가기</button>
+      <button class="btn-ghost btn-sm" id="btn-quit">그만하기</button>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 결과 ========== -->
+<section id="s-result" class="screen">
+  <div class="panel">
+    <h2 id="r-title"></h2>
+    <p id="r-msg"></p>
+    <div class="metrics"><span id="r-stat"></span></div>
+    <div class="note" id="save-note" style="color:var(--warn)"></div>
+  </div>
+  <div class="panel" id="r-review"></div>
+  <div class="row">
+    <button class="btn-main" style="flex:1" id="r-next">다음 단계로</button>
+    <button class="btn-ghost" style="flex:1" id="r-again">한 번 더</button>
+  </div>
+  <div class="row" style="margin-top:8px"><button class="btn-ghost btn-sm" onclick="go('s-home')">단계 목록으로</button></div>
+</section>
+
+<!-- ========== 시험 ========== -->
+<section id="s-exam" class="screen">
+  <div class="panel" id="exam-intro">
+    <h2>시험 스테이지</h2>
+    <p>선생님과 함께 보는 시험입니다. 화면에 나오는 자음이나 모음의 <b>세 가지 특징</b>을 선생님께 말로 답하세요.</p>
+    <ul class="muted">
+      <li>자음: 소리 나는 위치 · 발음하는 방식 · 소리의 세기</li>
+      <li>모음: 혀의 앞뒤 위치 · 입술 모양 · 혀의 높낮이</li>
+      <li>모두 5문제이고, 세 가지를 다 맞혀야 그 문제를 맞힌 것으로 칩니다. (ㅎ은 세기를 묻지 않으므로 위치·방식 두 가지만 답합니다.)</li>
+    </ul>
+    <button class="btn-main" id="ex-start" style="width:100%;margin-top:10px">시험 시작</button>
+    <div class="row" style="margin-top:8px"><button class="btn-ghost btn-sm" onclick="go('s-home')">← 돌아가기</button></div>
+  </div>
+
+  <div id="exam-run" style="display:none">
+    <div class="panel"><div class="metrics"><span id="ex-count"></span></div><div class="bar"><i id="ex-bar"></i></div></div>
+    <div class="panel">
+      <div class="card-area"><div class="card big" id="ex-card"></div></div>
+      <div class="row" style="margin-bottom:14px">
+        <button class="btn-ghost btn-sm" id="ex-reveal">정답 보기</button>
+      </div>
+      <div class="muted" style="margin-bottom:8px">선생님이 채점합니다.</div>
+      <div id="ex-ox"></div>
+      <button class="btn-main" id="ex-next" style="width:100%;margin-top:12px">다음 문제 →</button>
+    </div>
+  </div>
+
+  <div id="exam-done" style="display:none">
+    <div class="panel"><h2>시험이 끝났습니다</h2><p id="ex-score"></p></div>
+    <div class="panel" id="ex-detail"></div>
+    <button class="btn-main" style="width:100%" onclick="go('s-home')">단계 목록으로</button>
+  </div>
+</section>
+
+</div>
+
+<div class="modal-bg" id="modal"><div class="modal">
+  <h3 id="md-title"></h3><p id="md-body"></p>
+  <div class="row end" id="md-btns"></div>
+</div></div>
+
+<script>
+/*==================== 로컬 저장 (v7: 서버 없이 브라우저에 저장) ====================*/
+const STORE_KEY = 'hangul-jamo-game-v1';
+function loadStore(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }catch(e){ return {}; } }
+function saveStore(st){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(st)); }catch(e){} }
+const LOCAL_API = {
+  apiSaveStageResult: function(id, p){
+    const st = loadStore(); st.progress = st.progress || {};
+    const prev = st.progress[p.stageId] || {tries:0, best:0, passed:false};
+    st.progress[p.stageId] = {tries:prev.tries+1, best:Math.max(prev.best, Number(p.accuracy)||0),
+      passed:prev.passed || !!p.passed, last:new Date().toISOString()};
+    saveStore(st); return {ok:true};
+  },
+  apiGetLastExamChars: function(){ return loadStore().lastExam || {round:0, chars:[]}; },
+  apiSaveExam: function(id, p){
+    const st = loadStore(); st.progress = st.progress || {};
+    const items = p.items || [];
+    const score = items.filter(function(it){ return it.correct; }).length;
+    const prev = st.progress.exam || {tries:0, best:0};
+    st.lastExam = {round:p.round, chars:items.map(function(it){ return String(it.char); })};
+    st.progress.exam = {tries:prev.tries+1, best:Math.max(prev.best, items.length ? score/items.length : 0),
+      passed:true, last:new Date().toISOString()};
+    saveStore(st); return {ok:true};
+  }
+};
+// 기존 google.script.run 호출 모양을 그대로 쓸 수 있게 해 주는 대체 객체
+const google = { script: { get run(){
+  let ok = null, fail = null;
+  const r = { withSuccessHandler:function(f){ ok=f; return r; }, withFailureHandler:function(f){ fail=f; return r; } };
+  Object.keys(LOCAL_API).forEach(function(k){
+    r[k] = function(){ const a = arguments;
+      setTimeout(function(){ try{ const res = LOCAL_API[k].apply(null, a); if(ok) ok(res); }
+        catch(e){ if(fail) fail(e); else console.error(e); } }, 0); };
+  });
+  return r;
+} } };
+
+/*==================== 데이터 ====================*/
+const D = {"_meta":{"title":"한글 자모 학습 게임 기준 데이터","version":"1.0","date":"2026-09-21","source":"「자음 모음 탐구 -ㄱ,ㄴ,ㄷ부터 ㅏ,ㅑ,ㅓ,ㅕ까지-」 교정본 + 자모 체계표","note":"모든 분류 용어는 교정본 원문 표기를 기준으로 한다. 전설/후설 전체 목록은 원문에 없어 학교 문법 표준으로 보충한 부분이며 supplemented 필드로 표시한다.","scope":"자음 19개 + 단모음 10개. 이중모음 11개는 출제 범위에서 제외."},"labels":{"position":{"id":"position","screen":"소리 나는 위치","options":["순음","치조음","경구개음","연구개음","후음"]},"method":{"id":"method","screen":"발음하는 방식","options":["파열음","마찰음","파찰음","비음","유음"]},"strength":{"id":"strength","screen":"소리의 세기","options":["예사소리","된소리","거센소리","구분없음"]},"frontback":{"id":"frontback","screen":"혀의 앞뒤 위치","options":["전설모음","후설모음"]},"lip":{"id":"lip","screen":"입술 모양","options":["평순모음","원순모음"]},"height":{"id":"height","screen":"혀의 높낮이","options":["고모음","중모음","저모음"]}},"display_names":{"순음":"순음(입술소리)","치조음":"치조음(잇몸소리)","경구개음":"경구개음(센입천장소리)","연구개음":"연구개음(여린입천장소리)","후음":"후음(목청소리)","파열음":"파열음","마찰음":"마찰음","파찰음":"파찰음","비음":"비음(콧소리)","유음":"유음(흐름소리)","예사소리":"예사소리(평음)","된소리":"된소리(경음)","거센소리":"거센소리(격음)","구분없음":"세기 구분 없음","전설모음":"전설모음","후설모음":"후설모음","평순모음":"평순모음","원순모음":"원순모음","고모음":"고모음","중모음":"중모음","저모음":"저모음","울림소리":"울림소리","안울림소리":"안울림소리"},"consonants":[{"char":"ㅂ","position":"순음","method":"파열음","strength":"예사소리","voicing":"안울림소리"},{"char":"ㅃ","position":"순음","method":"파열음","strength":"된소리","voicing":"안울림소리"},{"char":"ㅍ","position":"순음","method":"파열음","strength":"거센소리","voicing":"안울림소리"},{"char":"ㅁ","position":"순음","method":"비음","strength":"구분없음","voicing":"울림소리"},{"char":"ㄷ","position":"치조음","method":"파열음","strength":"예사소리","voicing":"안울림소리"},{"char":"ㄸ","position":"치조음","method":"파열음","strength":"된소리","voicing":"안울림소리"},{"char":"ㅌ","position":"치조음","method":"파열음","strength":"거센소리","voicing":"안울림소리"},{"char":"ㅅ","position":"치조음","method":"마찰음","strength":"예사소리","voicing":"안울림소리"},{"char":"ㅆ","position":"치조음","method":"마찰음","strength":"된소리","voicing":"안울림소리"},{"char":"ㄴ","position":"치조음","method":"비음","strength":"구분없음","voicing":"울림소리"},{"char":"ㄹ","position":"치조음","method":"유음","strength":"구분없음","voicing":"울림소리"},{"char":"ㅈ","position":"경구개음","method":"파찰음","strength":"예사소리","voicing":"안울림소리"},{"char":"ㅉ","position":"경구개음","method":"파찰음","strength":"된소리","voicing":"안울림소리"},{"char":"ㅊ","position":"경구개음","method":"파찰음","strength":"거센소리","voicing":"안울림소리"},{"char":"ㄱ","position":"연구개음","method":"파열음","strength":"예사소리","voicing":"안울림소리"},{"char":"ㄲ","position":"연구개음","method":"파열음","strength":"된소리","voicing":"안울림소리"},{"char":"ㅋ","position":"연구개음","method":"파열음","strength":"거센소리","voicing":"안울림소리"},{"char":"ㅇ","position":"연구개음","method":"비음","strength":"구분없음","voicing":"울림소리","note":"받침(종성)에서만 소리 난다. 오답 해설과 힌트에서 이 점을 반드시 안내할 것."},{"char":"ㅎ","position":"후음","method":"마찰음","strength":"구분없음","voicing":"안울림소리"}],"vowels":[{"char":"ㅣ","frontback":"전설모음","lip":"평순모음","height":"고모음","supplemented":["frontback"]},{"char":"ㅟ","frontback":"전설모음","lip":"원순모음","height":"고모음","supplemented":["frontback"]},{"char":"ㅔ","frontback":"전설모음","lip":"평순모음","height":"중모음","supplemented":["frontback"]},{"char":"ㅚ","frontback":"전설모음","lip":"원순모음","height":"중모음","supplemented":["frontback"]},{"char":"ㅐ","frontback":"전설모음","lip":"평순모음","height":"저모음","supplemented":[]},{"char":"ㅡ","frontback":"후설모음","lip":"평순모음","height":"고모음","supplemented":["frontback"]},{"char":"ㅜ","frontback":"후설모음","lip":"원순모음","height":"고모음","supplemented":["frontback"]},{"char":"ㅓ","frontback":"후설모음","lip":"평순모음","height":"중모음","supplemented":["frontback"]},{"char":"ㅗ","frontback":"후설모음","lip":"원순모음","height":"중모음","supplemented":["frontback"]},{"char":"ㅏ","frontback":"후설모음","lip":"평순모음","height":"저모음","supplemented":[]}],"answer_dictionary":{"_rule":"입력을 정규화한 뒤 아래 목록과 대조한다. 정규화: ①모든 공백 제거 ②입력값 그대로 / 입력값+'음' / 입력값+'소리' 세 형태로 각각 대조 ③그래도 불일치하면 편집거리 1 이내인 항목을 찾아 '거의 맞았어요, 다시 한 번 써 보세요'로 1회 재입력 기회를 준다(이때 정답은 노출하지 않는다) ④재입력도 틀리면 오답 처리.","순음":["순음","입술소리","양순음","두입술소리","입술"],"치조음":["치조음","잇몸소리","치경음","잇몸"],"경구개음":["경구개음","센입천장소리","센입천장","구개음"],"연구개음":["연구개음","여린입천장소리","여린입천장"],"후음":["후음","목청소리","성문음","목청"],"파열음":["파열음","파열","터짐소리","폐쇄음"],"마찰음":["마찰음","마찰","갈이소리"],"파찰음":["파찰음","파찰","붙갈이소리"],"비음":["비음","콧소리"],"유음":["유음","흐름소리"],"예사소리":["예사소리","평음"],"된소리":["된소리","경음"],"거센소리":["거센소리","격음","유기음"],"구분없음":["구분없음","없음","해당없음","세기없음","구분안됨","없다"],"전설모음":["전설모음","전설","앞혀소리","앞"],"후설모음":["후설모음","후설","뒤혀소리","뒤"],"평순모음":["평순모음","평순"],"원순모음":["원순모음","원순","둥근입술"],"고모음":["고모음","고","폐모음","높은모음"],"중모음":["중모음","중","반개모음","반폐모음"],"저모음":["저모음","저","개모음","낮은모음"],"울림소리":["울림소리","유성음","울림"],"안울림소리":["안울림소리","무성음","안울림"]},"hints":{"_rule":"{char}에는 해당 자모를 넣는다. 같은 문제를 3회 틀리면 1차, 4회째 2차, 5회째 3차 힌트를 준다. 3차는 정답과 confusable 짝만 남긴 2지선다로 좁힌다.","position":{"순음":["'{char}' 소리를 내 보세요. 두 입술이 만나나요?","입술을 붙였다 떼면서 나는 소리예요.","순음 / 치조음 중에서"],"치조음":["'{char}' 소리를 내며 혀끝이 어디에 닿는지 느껴 보세요.","혀끝이 윗니 뒤 잇몸에 닿거나 가까워져요.","치조음 / 경구개음 중에서"],"경구개음":["'{char}' 소리를 낼 때 혓바닥이 입천장 어디쯤에 붙나요?","입천장 앞쪽의 단단한 부분(센입천장)에 닿아요.","경구개음 / 치조음 중에서"],"연구개음":["숨을 들이마시며 '{char}' 자리를 찾아보세요. 입천장 뒤쪽이 시원한가요?","입천장 뒤쪽의 말랑한 부분(여린입천장)에서 나요.","연구개음 / 경구개음 중에서"],"후음":["'{char}' 소리를 길게 내 보세요. 입안 어디에도 닿는 곳이 없죠?","목구멍에서 바로 바람이 나오는 소리예요.","후음 / 연구개음 중에서"]},"method":{"파열음":["'{char}' 소리를 내기 직전에 공기를 잠깐 막았다가 터뜨려 보세요.","풍선을 '펑' 터뜨리는 것과 같아요.","파열음 / 파찰음 중에서"],"마찰음":["'{char}—' 하고 길게 늘여 보세요. 소리가 계속 이어지나요?","풍선 주둥이를 살짝 놓아 바람이 새는 소리예요.","마찰음 / 파찰음 중에서"],"파찰음":["'{char}' 소리를 내 보세요. 막혔다가 바로 새어 나오지 않나요?","풍선 주둥이를 당겨 '찌—' 하고 내는 소리예요. 막힘과 새어나옴이 둘 다 있어요.","파찰음 / 마찰음 중에서"],"비음":["코를 손가락으로 막고 '{char}' 소리를 내 보세요. 소리가 나나요?","코로 공기가 나가는 소리예요. 코를 만지면 떨림이 느껴져요.","비음 / 유음 중에서"],"유음":["'{char}' 소리를 내며 혀가 어떻게 움직이는지 느껴 보세요.","혀 옆으로 공기가 흘러 나가는 소리예요.","유음 / 비음 중에서"]},"strength":{"예사소리":["'{char}' 소리를 낼 때 목과 입에 힘이 많이 들어가나요?","가장 힘을 빼고 편하게 내는 소리예요.","예사소리 / 된소리 중에서"],"된소리":["'{char}' 소리를 낼 때 목이 꽉 조이는 느낌이 드나요?","글자를 두 번 겹쳐 쓴 모양이에요. 목에 힘을 꽉 주고 내요.","된소리 / 거센소리 중에서"],"거센소리":["손바닥을 입 앞에 대고 '{char}' 소리를 내 보세요. 바람이 확 느껴지나요?","예사소리 글자에 획을 하나 더한 모양이에요. 공기를 많이 내보내요.","거센소리 / 된소리 중에서"],"구분없음":["이 자음에는 짝이 되는 된소리나 거센소리가 있나요? 떠올려 보세요.","세기로 짝을 이루지 않는 자음이 다섯 개 있어요: ㄴ ㅁ ㅇ ㄹ ㅎ","구분없음 / 예사소리 중에서"]},"frontback":{"전설모음":["'{char}' 소리를 내며 혀가 입안의 앞쪽에 있는지 뒤쪽에 있는지 느껴 보세요.","'ㅐ'를 소리 낼 때처럼 혀가 앞으로 나와요.","전설모음 / 후설모음 중에서"],"후설모음":["'{char}' 소리를 내며 혀가 입안의 앞쪽에 있는지 뒤쪽에 있는지 느껴 보세요.","'ㅏ'를 소리 낼 때처럼 혀가 뒤쪽에 있어요.","전설모음 / 후설모음 중에서"]},"lip":{"평순모음":["거울을 보거나 손으로 입술을 만지며 '{char}' 소리를 내 보세요.","입술이 동그래지지 않고 평평하게 펴져요.","평순모음 / 원순모음 중에서"],"원순모음":["거울을 보거나 손으로 입술을 만지며 '{char}' 소리를 내 보세요.","입술이 동그랗게 모여요.","평순모음 / 원순모음 중에서"]},"height":{"고모음":["'{char}'와 'ㅏ'를 번갈아 소리 내며 턱이 얼마나 내려가는지 느껴 보세요.","입이 거의 벌어지지 않아요. 혀가 입천장에 가까워요.","고모음 / 중모음 중에서"],"중모음":["'{char}'를 'ㅣ'와 'ㅏ' 사이에 놓아 보세요. 입이 얼마나 벌어지나요?","입이 중간쯤 벌어져요.","중모음 / 고모음 중에서"],"저모음":["'{char}' 소리를 낼 때 턱이 많이 내려가나요?","입이 가장 크게 벌어져요. 혀가 아래에 낮게 있어요.","저모음 / 중모음 중에서"]}},"confusable":{"순음":"치조음","치조음":"경구개음","경구개음":"치조음","연구개음":"경구개음","후음":"연구개음","파열음":"파찰음","마찰음":"파찰음","파찰음":"마찰음","비음":"유음","유음":"비음","예사소리":"된소리","된소리":"거센소리","거센소리":"된소리","구분없음":"예사소리","전설모음":"후설모음","후설모음":"전설모음","평순모음":"원순모음","원순모음":"평순모음","고모음":"중모음","중모음":"고모음","저모음":"중모음"},"stages":[{"id":"1","name":"자모 체계 구분 기준","target":"자음/모음의 차이와 6가지 분류 기준의 이름","direction":"개념","attrs":[]},{"id":"2-1","name":"자음 — 소리 나는 위치","target":"consonant","direction":"양방향","attrs":["position"]},{"id":"2-2","name":"자음 — 발음하는 방식","target":"consonant","direction":"양방향","attrs":["method"]},{"id":"2-3","name":"자음 — 소리의 세기","target":"consonant","direction":"양방향","attrs":["strength"]},{"id":"2-4","name":"모음 — 혀의 앞뒤 위치","target":"vowel","direction":"양방향","attrs":["frontback"]},{"id":"2-5","name":"모음 — 입술 모양","target":"vowel","direction":"양방향","attrs":["lip"]},{"id":"2-6","name":"모음 — 혀의 높낮이","target":"vowel","direction":"양방향","attrs":["height"]},{"id":"3-1","name":"자음 3기준 통합 (선택형)","target":"consonant","direction":"정방향","attrs":["position","method","strength"],"input":"choice"},{"id":"3-2","name":"모음 3기준 통합 (선택형)","target":"vowel","direction":"정방향","attrs":["frontback","lip","height"],"input":"choice"},{"id":"4-1","name":"자음 3기준 통합 (주관식)","target":"consonant","direction":"정방향","attrs":["position","method","strength"],"input":"text"},{"id":"4-2","name":"모음 3기준 통합 (주관식)","target":"vowel","direction":"정방향","attrs":["frontback","lip","height"],"input":"text"},{"id":"5","name":"자음·모음 체계 통합 (역방향 주관식)","target":"mixed","direction":"역방향","attrs":["all"],"input":"text","desc":"세 가지 특징을 모두 제시하고 해당하는 자모를 쓰게 한다. 자음과 모음을 섞어 출제한다."},{"id":"exam","name":"시험 스테이지","target":"mixed","direction":"정방향","attrs":["all"],"input":"oral"}],"progress_rule":{"set_size_options":[10,15,20,30],"count_rule":"맞힌 문제만 학습량에 포함한다. 틀린 문제는 카운트되지 않으며 큐에 다시 들어간다.","requeue_interval":{"1":3,"2":5,"3+":8},"hint_start_after_wrong":3,"park_after_wrong":5,"park_message":"이 문제는 잠시 쉬어갈까요? 스테이지가 끝나면 다시 보여 드릴게요.","early_pass":{"at":"목표 개수의 2/3를 맞힌 순간 (ceil(N*2/3))","condition":"누적 정답률 >= 0.8","action":"'충분히 익혔어요. 다음 단계로 갈까요?' — [계속하기] / [다음 단계로] 선택"},"on_complete":[{"accuracy":"== 1.0","message":"완벽해요! 다음 단계로 가세요.","suggest_next":true},{"accuracy":">= 0.8","message":"잘했어요. 다음 단계로 가도 좋아요.","suggest_next":true},{"accuracy":"< 0.8","message":"한 번 더 연습해 볼까요?","suggest_next":false}],"wrong_answer_feedback":"오답이라는 사실만 알린다. 정답과 해설은 스테이지 종료 화면에서 공개한다.","end_screen":"이번에 틀렸던 자모 목록 + 각 자모의 정답 3속성 + 한 줄 해설. 보류된 문제도 여기에 포함한다."},"exam_rule":{"question_count":5,"scoring":"3속성을 모두 맞혀야 1문항 정답. 교사는 속성별로 O/X를 탭한다(통계용).","answer_reveal":"교사가 [정답 보기]를 누르면 즉시 표시.","sampling":[{"no":1,"target":"consonant","position_in":["연구개음","경구개음"],"method_in":["파열음","파찰음"]},{"no":2,"target":"consonant","position_in":["치조음"],"method_in":["마찰음","유음"]},{"no":3,"target":"consonant","position_in":["순음","후음"],"method_in":["비음","마찰음"]},{"no":4,"target":"vowel","frontback_in":["전설모음"],"height_constraint":"5번과 다른 높낮이"},{"no":5,"target":"vowel","frontback_in":["후설모음"],"height_constraint":"4번과 다른 높낮이"}],"order":"1~5번 문항을 매번 무작위 순서로 섞어 제시한다.","repeat_policy":"같은 학생을 재평가할 때는 직전 회차에 나온 자모를 제외하고 뽑는다."},"ui_rule":{"choice_options_always_full":"선택형 문항의 선택지는 항상 해당 기준의 전체 항목을 노출한다. 특히 소리의 세기는 항상 4개(예사/된/거센/구분없음)를 모두 보여 추측을 막는다.","card":{"stage_1_2":"앞면=자모 / 뒷면=특징. 학생이 자유롭게 뒤집으며 익힌다.","stage_3_5":"카드가 뒤집히며 문제가 나타난다. 정답일 때만 뒷면이 열려 확인된다. 오답일 때는 뒤집히지 않는다.","exam":"카드 제시 후 교사가 누를 때만 정답 면이 열린다."}}};
+const CONS = D.consonants, VOW = D.vowels;
+const CONS_ATTRS = ['position','method','strength'];
+const VOW_ATTRS  = ['frontback','lip','height'];
+const byChar = {}; CONS.concat(VOW).forEach(function(x){ byChar[x.char]=x; });
+function isVowel(ch){ return VOW.some(function(v){return v.char===ch;}); }
+function disp(v){ return D.display_names[v] || v; }
+function attrLabel(a){ return D.labels[a].screen; }
+function pool(t){ return t==='vowel'?VOW:(t==='consonant'?CONS:CONS.concat(VOW)); }
+// ㅎ은 교과서에서 소리의 세기를 다루지 않으므로 세기를 묻지 않는다 (v6)
+const NO_STRENGTH = ['ㅎ'];
+function attrsOf(ch){ if(isVowel(ch)) return VOW_ATTRS; return NO_STRENGTH.indexOf(ch)>=0 ? ['position','method'] : CONS_ATTRS; }
+function numKo(n){ return ['','한','두','세','네'][n]||String(n); }
+// 세기 '구분없음' 힌트에서 ㅎ을 뺀다 (Data.gs 힌트 문구 보정)
+(function(){ try{ const h=D.hints.strength['구분없음']; h[1]=h[1].replace('다섯 개','네 개').replace(/\s*ㅎ/,''); }catch(e){} })();
+
+/*==================== 카드 그리기 (v5) ====================*/
+const JAMO_NAME = {'ㄱ':'기역','ㄲ':'쌍기역','ㄴ':'니은','ㄷ':'디귿','ㄸ':'쌍디귿','ㄹ':'리을','ㅁ':'미음',
+  'ㅂ':'비읍','ㅃ':'쌍비읍','ㅅ':'시옷','ㅆ':'쌍시옷','ㅇ':'이응','ㅈ':'지읒','ㅉ':'쌍지읒','ㅊ':'치읓',
+  'ㅋ':'키읔','ㅌ':'티읕','ㅍ':'피읖','ㅎ':'히읗',
+  'ㅏ':'아','ㅐ':'애','ㅓ':'어','ㅔ':'에','ㅗ':'오','ㅚ':'외','ㅜ':'우','ㅟ':'위','ㅡ':'으','ㅣ':'이'};
+const ATTR_SHORT = {position:'위치', method:'방식', strength:'세기', frontback:'앞뒤', lip:'입술', height:'높낮이'};
+function svgI(p){ return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>'; }
+const ICON_C = [
+  svgI('<path d="M12 21C12 21 5 14 5 9a7 7 0 0 1 14 0c0 5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>'),
+  svgI('<path d="M3 9c3-3 6 3 9 0s6-3 9 0"/><path d="M3 15c3-3 6 3 9 0s6-3 9 0"/>'),
+  svgI('<path d="M13 3L5 14h7l-1 7 8-11h-7z"/>')];
+const ICON_V = [
+  svgI('<path d="M4 12h16M8 8l-4 4 4 4M16 8l4 4-4 4"/>'),
+  svgI('<ellipse cx="12" cy="12" rx="8" ry="5"/>'),
+  svgI('<path d="M12 4v16M8 8l4-4 4 4M8 16l4 4 4-4"/>')];
+const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="#F07A2B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg>';
+function escA(t){ return String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+/** '치조음(잇몸소리)' → {m:'치조음', s:'잇몸소리'} */
+function splitDisp(t){ const m=/^(.+?)\((.+)\)$/.exec(t); return m?{m:m[1],s:m[2]}:{m:t,s:''}; }
+function kindCls(ch){ return isVowel(ch)?'vow':'cons'; }
+function frontFace(ch){
+  return '<div class="face front"><div class="jc-top"><span class="jc-pill">'+(isVowel(ch)?'모음':'자음')+'</span></div>'+
+    '<div class="jc-win"><span class="jamo">'+ch+'</span></div>'+
+    '<div class="jc-name">'+(JAMO_NAME[ch]||'')+'</div></div>';
+}
+function backFace(ch, item, attrs, hl){
+  const icons = isVowel(ch)?ICON_V:ICON_C;
+  return '<div class="face back"><div class="bk-head"><span class="bk-ch">'+ch+'</span><span class="bk-nm">'+(JAMO_NAME[ch]||'')+'</span></div>'+
+    '<div class="bk-rows">'+attrs.map(function(a,i){
+      const d=splitDisp(disp(item[a]));
+      return '<div class="feat'+(a===hl?' hl':'')+'"><span class="ic a'+i+'">'+icons[i]+'</span><span>'+
+        '<span class="fl">'+attrLabel(a)+'</span><span class="fv">'+d.m+(d.s?'<small>'+d.s+'</small>':'')+'</span></span></div>';
+    }).join('')+'</div></div>';
+}
+function cardHTML(ch){
+  return '<div class="card-area"><div class="card '+kindCls(ch)+'">'+frontFace(ch)+'</div></div>';
+}
+/* 손패: 선택지를 부채꼴 카드로 펼친다 */
+function optItem(o, sel){ const d=splitDisp(disp(o)); return {v:o, m:d.m, s:d.s, sel:!!sel}; }
+function handHTML(items, cls){
+  return '<div class="hand">'+items.map(function(it){
+    return '<button class="hcard '+(cls||'')+(it.sel?' sel':'')+'" data-v="'+escA(it.v)+'"><span class="hm">'+it.m+'</span>'+
+      (it.s?'<span class="hs">'+it.s+'</span>':'')+'</button>';
+  }).join('')+'</div>';
+}
+function layoutHands(){
+  document.querySelectorAll('.hand').forEach(function(h){
+    const cards=[].slice.call(h.querySelectorAll('.hcard'));
+    const n=cards.length; if(!n) return;
+    const W=h.clientWidth||340;
+    const txt = cards[0].classList.contains('txt');
+    const maxW = txt ? 130 : 110;
+    // 카드끼리 글자가 가려지지 않도록: 먼저 겹치지 않는 폭을 계산하고, 너무 좁을 때만 조금 겹친다
+    const gap = n<=3 ? 14 : 4;
+    let cw = Math.min(maxW, Math.floor((W-8-gap*(n-1))/n));
+    cw = Math.max(cw, 62);
+    const sp = n>1 ? Math.min(cw+gap, (W-cw-8)/(n-1)) : 0;
+    const chH = Math.round(Math.min(150, Math.max(112, cw*1.42)));
+    const x0 = (W-(cw+sp*(n-1)))/2;
+    const mid=(n-1)/2, ang = n<=3?4:(n===4?5:6), drop = n<=3?3:5;
+    h.classList.toggle('narrow', cw<86);
+    cards.forEach(function(c,i){
+      c.style.width=cw+'px'; c.style.height=chH+'px';
+      c.style.left=(x0+sp*i)+'px';
+      c.style.setProperty('--r', ((i-mid)*ang)+'deg');
+      c.style.setProperty('--y', (26+Math.pow(i-mid,2)*drop)+'px');
+    });
+    h.style.height=(chH+26+Math.pow(mid,2)*drop+14)+'px';
+  });
+}
+window.addEventListener('resize', layoutHands);
+
+const STAGES = [
+ {id:'1', name:'1단계 · 자모 체계 구분 기준', group:1,
+  desc:'자음과 모음을 나누는 기준의 이름과 갈래를 익힙니다.',
+  units:[
+   {uid:'1-1', label:'자음과 모음의 차이',      type:'concept', topic:'basic'},
+   {uid:'1-2', label:'자음을 나누는 세 기준',   type:'concept', topic:'cons'},
+   {uid:'1-3', label:'모음을 나누는 세 기준',   type:'concept', topic:'vow'}
+  ]},
+ {id:'2', name:'2단계 · 기준 하나씩 연습하기', group:1,
+  desc:'기준을 하나씩 연습합니다. 자모를 보고 특징을 고르기도 하고, 특징을 보고 자모를 고르기도 합니다.',
+  units:[
+   {uid:'2-1', label:'자음 — 소리 나는 위치', type:'single', target:'consonant', attr:'position'},
+   {uid:'2-2', label:'자음 — 발음하는 방식',   type:'single', target:'consonant', attr:'method'},
+   {uid:'2-3', label:'자음 — 소리의 세기',     type:'single', target:'consonant', attr:'strength'},
+   {uid:'2-4', label:'모음 — 혀의 앞뒤 위치',  type:'single', target:'vowel',     attr:'frontback'},
+   {uid:'2-5', label:'모음 — 입술 모양',       type:'single', target:'vowel',     attr:'lip'},
+   {uid:'2-6', label:'모음 — 혀의 높낮이',     type:'single', target:'vowel',     attr:'height'}
+  ]},
+ {id:'3', name:'3단계 · 세 기준 한꺼번에 (고르기)', group:1,
+  desc:'세 가지 기준을 한꺼번에 고릅니다. 세 가지를 모두 맞혀야 정답입니다.',
+  units:[
+   {uid:'3-1', label:'자음', type:'triple', target:'consonant', input:'choice'},
+   {uid:'3-2', label:'모음', type:'triple', target:'vowel',     input:'choice'}
+  ]},
+ {id:'4', name:'4단계 · 세 기준 한꺼번에 (쓰기)', group:1,
+  desc:'세 가지 기준을 한꺼번에 직접 씁니다. 세 가지를 모두 맞혀야 정답입니다.',
+  units:[
+   {uid:'4-1', label:'자음', type:'triple', target:'consonant', input:'text'},
+   {uid:'4-2', label:'모음', type:'triple', target:'vowel',     input:'text'}
+  ]},
+ {id:'5', name:'5단계 · 거꾸로 맞히기 (쓰기)', group:1,
+  desc:'세 가지 특징을 보고 어떤 자음·모음인지 직접 씁니다.',
+  units:[
+   {uid:'5-1', label:'자음', type:'reverse', target:'consonant', input:'text'},
+   {uid:'5-2', label:'모음', type:'reverse', target:'vowel',     input:'text'}
+  ]},
+ {id:'exam',name:'시험 스테이지', type:'exam', group:9, units:[]}
+];
+function stageById(id){ return STAGES.find(function(s){return s.id===id;}); }
+/** 예전 기록의 단계ID('2-3', '3-1' 등)를 새 단계('2','3')로 묶어 준다 */
+function groupOf(sid){
+  sid = String(sid);
+  if(sid==='exam') return 'exam';
+  const g = sid.charAt(0);
+  return ['1','2','3','4','5'].indexOf(g)>=0 ? g : sid;
+}
+/** 받침 유무에 따라 '은/는'을 고른다 */
+function eun(w){
+  w = String(w||''); if(!w) return '은';
+  const c = w.charCodeAt(w.length-1);
+  if(c<0xAC00 || c>0xD7A3) return '은';
+  return ((c-0xAC00)%28) ? '은' : '는';
+}
+
+/*==================== 1단계 내용 ====================*/
+const CONCEPT = [
+ {t:'basic', h:'자음과 모음은 무엇이 다를까?',
+  b:'<p><b>음운</b>은 말의 뜻을 구별해 주는 소리의 가장 작은 단위입니다.</p>'+
+    '<p><b>자음</b>은 공기가 <b>방해를 받으며</b> 나오는 소리입니다. 입술, 혀, 입천장 같은 곳이 공기를 막거나 좁힙니다.</p>'+
+    '<p><b>모음</b>은 공기가 <b>그대로 흘러나오는</b> 소리입니다. 목청을 떨어 소리를 냅니다.</p>'+
+    '<p class="muted">직접 해 보기: “아—”와 “ㅅ—”을 각각 길게 소리 내 보세요. 어디가 막히는지 느껴 보세요.</p>'},
+ {t:'cons', h:'자음을 나누는 세 가지 기준',
+  b:'<p><b>① 소리 나는 위치</b> — 순음(입술소리) · 치조음(잇몸소리) · 경구개음(센입천장소리) · 연구개음(여린입천장소리) · 후음(목청소리)</p>'+
+    '<p><b>② 발음하는 방식</b> — 파열음 · 마찰음 · 파찰음 · 비음(콧소리) · 유음(흐름소리)</p>'+
+    '<p><b>③ 소리의 세기</b> — 예사소리(평음) · 된소리(경음) · 거센소리(격음)</p>'+
+    '<p class="muted">세기로 짝을 이루지 않는 자음이 네 개 있습니다: <b>ㄴ ㅁ ㅇ ㄹ</b>. 이 자음들은 “세기 구분 없음”이 답입니다.</p>'+
+    '<p class="muted"><b>ㅎ</b>은 교과서에서 소리의 세기를 따로 다루지 않아요. 그래서 이 프로그램에서는 ㅎ의 세기를 묻지 않습니다.</p>'},
+ {t:'vow', h:'모음을 나누는 세 가지 기준',
+  b:'<p><b>① 혀의 앞뒤 위치</b> — 전설모음 · 후설모음</p>'+
+    '<p><b>② 입술 모양</b> — 평순모음 · 원순모음</p>'+
+    '<p><b>③ 혀의 높낮이</b> — 고모음 · 중모음 · 저모음</p>'+
+    '<p>이 세 기준으로 나누는 것은 <b>단모음 10개</b>입니다. (ㅣ ㅔ ㅐ ㅟ ㅚ ㅡ ㅓ ㅏ ㅜ ㅗ)</p>'+
+    '<p class="muted">이중모음 11개는 이 프로그램에서 다루지 않습니다. 전설·후설모음의 전체 목록은 원문에 없어 학교 문법 표준으로 보충한 것입니다.</p>'}
+];
+const CONCEPT_Q = [
+ {t:'basic', q:'공기가 방해를 받지 않고 그대로 흘러나오는 소리는?', o:['자음','모음','음절','음운'], a:'모음'},
+ {t:'basic', q:'말의 뜻을 구별해 주는 소리의 가장 작은 단위는?', o:['음절','음운','단어','문장'], a:'음운'},
+ {t:'cons',  q:'자음을 나누는 세 가지 기준이 <b>아닌</b> 것은?', o:['소리 나는 위치','발음하는 방식','소리의 세기','혀의 높낮이'], a:'혀의 높낮이'},
+ {t:'vow',   q:'모음을 나누는 세 가지 기준이 <b>아닌</b> 것은?', o:['혀의 앞뒤 위치','입술 모양','혀의 높낮이','발음하는 방식'], a:'발음하는 방식'},
+ {t:'cons',  q:'다음 중 ‘소리 나는 위치’에 따른 분류가 <b>아닌</b> 것은?', o:['치조음','파찰음','후음','경구개음'], a:'파찰음'},
+ {t:'cons',  q:'다음 중 ‘발음하는 방식’에 따른 분류인 것은?', o:['원순모음','거센소리','유음','연구개음'], a:'유음'},
+ {t:'cons',  q:'소리의 세기로 짝을 이루지 <b>않는</b> 자음끼리 묶인 것은?', o:['ㄱ ㄷ ㅂ','ㄲ ㄸ ㅃ','ㄴ ㅁ ㅇ ㄹ','ㅋ ㅌ ㅍ'], a:'ㄴ ㅁ ㅇ ㄹ'},
+ {t:'vow',   q:'다음 중 <b>입술 모양</b>에 따른 분류인 것은?', o:['고모음','원순모음','전설모음','유음'], a:'원순모음'},
+ {t:'vow',   q:'소리를 내는 도중에 입술이나 혀가 움직이지 <b>않는</b> 모음을 무엇이라고 하나요?', o:['단모음','이중모음','반모음','비음'], a:'단모음'}
+];
+
+/*==================== 상태 ====================*/
+let USER = {id:'local', name:'', role:'student', progress:(loadStore().progress || {})};
+let S = null;          // 학습 세션
+let EX = null;         // 시험 세션
+
+/*==================== 화면 전환 ====================*/
+function $(id){ return document.getElementById(id); }
+function go(id){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('on'); });
+  $(id).classList.add('on');
+  document.body.classList.toggle('opening', id==='s-open');
+  window.scrollTo(0,0);
+  if(typeof updateStuck==='function') updateStuck();
+  if(typeof layoutHands==='function') layoutHands();
+}
+function modal(title, body, btns){
+  $('md-title').textContent = title;
+  $('md-body').innerHTML = body;
+  const box = $('md-btns'); box.innerHTML='';
+  btns.forEach(function(b){
+    const el=document.createElement('button');
+    el.textContent=b.label; el.className=b.main?'btn-main':'btn-ghost';
+    el.onclick=function(){ $('modal').classList.remove('on'); b.fn && b.fn(); };
+    box.appendChild(el);
+  });
+  $('modal').classList.add('on');
+}
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+/*==================== 오프닝 (v7) ====================*/
+document.body.classList.add('opening');
+$('btn-open-start').onclick = function(){ renderHome(); go('s-home'); };
+$('btn-opening').onclick = function(){ go('s-open'); };
+$('btn-reset').onclick = function(){
+  modal('학습 기록을 지울까요?', '이 기기에 저장된 단계별 기록과 시험 기록이 모두 지워집니다. 되돌릴 수 없어요.',
+    [{label:'취소'}, {label:'지우기', main:true, fn:function(){
+      try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+      USER.progress = {}; renderHome();
+    }}]);
+};
+
+/*==================== 홈 ====================*/
+/** 학생별 진도: 예전 세부 단계 기록도 새 단계로 묶어서 보여 준다 */
+function progressOf(stageId){
+  const P = USER.progress||{};
+  let hit=null;
+  Object.keys(P).forEach(function(k){
+    if(groupOf(k)!==stageId) return;
+    const v=P[k];
+    if(!hit) hit={tries:0,best:0,passed:false};
+    hit.tries += v.tries||0;
+    hit.best = Math.max(hit.best, v.best||0);
+    hit.passed = hit.passed || !!v.passed;
+  });
+  return hit;
+}
+function renderHome(){
+  const main=$('list-main'), ex=$('list-x');
+  main.innerHTML=''; ex.innerHTML='';
+  STAGES.forEach(function(st){
+    const p = progressOf(st.id);
+    const b = document.createElement('button');
+    b.className='stage-item';
+    let badge = '<span class="badge">아직 안 함</span>';
+    if(p && p.passed) badge = '<span class="badge pass">통과 · 최고 '+Math.round(p.best*100)+'%</span>';
+    else if(p) badge = '<span class="badge">최고 '+Math.round(p.best*100)+'%</span>';
+    if(st.id==='exam') badge = p ? '<span class="badge pass">응시함</span>' : '<span class="badge">미응시</span>';
+    const sub = st.units.length ? '<span class="sub">고를 수 있는 것 '+st.units.length+'가지</span>' : '';
+    b.innerHTML = '<span class="nm">'+st.name+sub+'</span>'+badge;
+    b.onclick=function(){ openStage(st.id); };
+    (st.group===9?ex:main).appendChild(b);
+  });
+}
+
+/* 단계 설정 화면 상태 */
+let SET = {st:null, sel:[], size:10};
+
+function selectedUnits(){
+  return SET.st.units.filter(function(u){ return SET.sel.indexOf(u.uid)>=0; });
+}
+function openStage(id){
+  const st = stageById(id);
+  if(st.id==='exam'){ startExamIntro(); return; }
+  SET = {st:st, sel:st.units.map(function(u){return u.uid;}), size:10};  // 기본: 전부 선택
+  $('setup-title').textContent = st.name;
+  $('setup-desc').textContent = st.desc||'';
+  $('setup-msg').style.display='none';
+  renderUnitOpts();
+
+  // 학습량 (1단계는 개념 문항 수가 정해져 있으므로 숨긴다)
+  const so = $('size-opts'); so.innerHTML='';
+  $('box-size').style.display = (st.id==='1') ? 'none' : 'block';
+  D.progress_rule.set_size_options.forEach(function(n){
+    const b=document.createElement('button');
+    b.textContent=n+'문제'; b.className = n===SET.size?'opt sel':'opt'; b.style.flex='1';
+    b.onclick=function(){ SET.size=n; so.querySelectorAll('button').forEach(function(x){x.className='opt';}); b.className='opt sel'; };
+    so.appendChild(b);
+  });
+
+  $('btn-all').onclick=function(){ SET.sel=st.units.map(function(u){return u.uid;}); renderUnitOpts(); };
+  $('btn-none').onclick=function(){ SET.sel=[]; renderUnitOpts(); };
+
+  $('btn-start').onclick=function(){
+    const us = selectedUnits();
+    if(!us.length){
+      $('setup-msg').textContent='적어도 하나는 골라 주세요.';
+      $('setup-msg').style.display='block'; return;
+    }
+    if(st.id==='1'){ startConcept(us); return; }
+    startSession(st, SET.size, us);
+  };
+  $('btn-flash').style.display = (st.id==='1') ? 'none' : 'inline-block';
+  $('btn-flash').onclick=function(){
+    const us = selectedUnits();
+    if(!us.length){ $('setup-msg').textContent='적어도 하나는 골라 주세요.'; $('setup-msg').style.display='block'; return; }
+    startFlash(st, us);
+  };
+  go('s-setup');
+}
+function renderUnitOpts(){
+  const box=$('unit-opts'); box.innerHTML='';
+  SET.st.units.forEach(function(u){
+    const on = SET.sel.indexOf(u.uid)>=0;
+    const lab=document.createElement('label');
+    lab.className='unitchk'+(on?' on':'');
+    lab.innerHTML='<input type="checkbox"'+(on?' checked':'')+'><span class="ul">'+u.label+'</span>';
+    lab.querySelector('input').onchange=function(){
+      if(this.checked){ if(SET.sel.indexOf(u.uid)<0) SET.sel.push(u.uid); }
+      else { SET.sel = SET.sel.filter(function(x){return x!==u.uid;}); }
+      lab.classList.toggle('on', this.checked);
+      $('setup-msg').style.display='none';
+    };
+    box.appendChild(lab);
+  });
+}
+
+/*==================== 카드 넘겨보기 ====================*/
+let FC = {list:[], i:0, st:null};
+function startFlash(st, units){
+  const seen={}, list=[];
+  units.forEach(function(u){
+    pool(u.target).forEach(function(x){ if(!seen[x.char]){ seen[x.char]=1; list.push(x); } });
+  });
+  FC.st=st; FC.list=shuffle(list); FC.i=0;
+  $('flash-title').textContent = st.name + ' · 카드';
+  $('fc-back-btn').onclick=function(){ openStage(st.id); };
+  drawFlash(); go('s-flash');
+}
+function drawFlash(){
+  const it = FC.list[FC.i];
+  $('fcard').className = 'card big '+kindCls(it.char);
+  $('fcard').innerHTML = frontFace(it.char) + backFace(it.char, it, attrsOf(it.char), null);
+  $('fc-count').textContent = (FC.i+1)+' / '+FC.list.length;
+}
+$('fc-prev').onclick=function(){ FC.i=(FC.i-1+FC.list.length)%FC.list.length; drawFlash(); };
+$('fc-next').onclick=function(){ FC.i=(FC.i+1)%FC.list.length; drawFlash(); };
+
+/*==================== 1단계 ====================*/
+let CP = 0, CP_PAGES = [], CP_UNITS = [];
+function startConcept(units){
+  CP_UNITS = units;
+  const topics = units.map(function(u){return u.topic;});
+  CP_PAGES = CONCEPT.filter(function(c){ return topics.indexOf(c.t)>=0; });
+  CP=0; drawConcept(); go('s-concept');
+}
+function drawConcept(){
+  const c = CP_PAGES[CP];
+  $('concept-body').innerHTML = '<h2>'+c.h+'</h2>'+c.b+'<p class="muted" style="margin-top:14px">'+(CP+1)+' / '+CP_PAGES.length+'</p>';
+  $('cp-prev').style.visibility = CP===0?'hidden':'visible';
+  $('cp-next').textContent = CP===CP_PAGES.length-1 ? '문제 풀러 가기 →' : '다음 →';
+}
+$('cp-prev').onclick=function(){ if(CP>0){CP--;drawConcept();} };
+$('cp-next').onclick=function(){
+  if(CP<CP_PAGES.length-1){ CP++; drawConcept(); }
+  else {
+    const topics = CP_UNITS.map(function(u){return u.topic;});
+    const n = CONCEPT_Q.filter(function(q){ return topics.indexOf(q.t)>=0; }).length;
+    startSession(stageById('1'), n, CP_UNITS);
+  }
+};
+
+/*==================== 채점 도구 ====================*/
+function normStr(s){ return String(s==null?'':s).replace(/\s/g,'').trim(); }
+function lev(a,b){
+  const m=a.length,n=b.length; if(Math.abs(m-n)>1) return 2;
+  const dp=Array.from({length:m+1},function(_,i){return [i].concat(new Array(n).fill(0));});
+  for(let j=0;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return dp[m][n];
+}
+function findCategory(v){
+  for(const cat in D.answer_dictionary){
+    if(cat.charAt(0)==='_') continue;
+    const list=D.answer_dictionary[cat];
+    if(list.indexOf(v)>=0 || list.indexOf(v+'음')>=0 || list.indexOf(v+'소리')>=0) return cat;
+  }
+  return null;
+}
+/** 'exact' | 'near' | 'wrong' */
+function gradeText(input, correctCat){
+  const v = normStr(input);
+  if(!v) return 'wrong';
+  const cat = findCategory(v);
+  if(cat===correctCat) return 'exact';
+  if(cat) return 'wrong';
+  const list = D.answer_dictionary[correctCat]||[correctCat];
+  const cands=[v, v+'음', v+'소리'];
+  for(let i=0;i<cands.length;i++) for(let j=0;j<list.length;j++)
+    if(lev(cands[i],list[j])<=1) return 'near';
+  return 'wrong';
+}
+function hintText(attr, value, char, level){
+  const h = D.hints[attr] && D.hints[attr][value];
+  if(!h) return '';
+  return h[Math.max(0,Math.min(2,level-1))].replace(/\{char\}/g, char);
+}
+
+/*==================== 학습 세션 ====================*/
+function startSession(st, size, units){
+  S = {
+    stage: st, units: units, setSize: size,
+    correct:0, attempts:0, idx:0,
+    pending:[], wrongMap:{}, parked:[], mastered:{},
+    wrongInfo:{},  // char -> {attr:true}
+    details:[], recent:[],
+    current:null, retryUsed:false, answered:false
+  };
+  // 1단계: 고른 주제의 개념 문항만 풀이 대상으로 삼는다
+  if(st.id==='1'){
+    const topics = units.map(function(u){return u.topic;});
+    S.conceptIdx = CONCEPT_Q.map(function(q,i){return i;})
+      .filter(function(i){ return topics.indexOf(CONCEPT_Q[i].t)>=0; });
+    S.setSize = S.conceptIdx.length;
+  }
+  $('m-stage').textContent = st.name;
+  nextQuestion();
+  go('s-learn');
+}
+
+function makeQuestion(){
+  const u = pick(S.units);   // 학생이 고른 항목 중 하나를 뽑아 출제한다
+  if(u.type==='concept'){
+    const left = S.conceptIdx.filter(function(i){
+      return !S.mastered['c'+i] && !S.pending.some(function(p){return p.q.key==='c'+i;});
+    });
+    const i = left.length ? pick(left) : pick(S.conceptIdx);
+    const c = CONCEPT_Q[i];
+    return {key:'c'+i, kind:'concept', text:c.q, opts:shuffle(c.o), answer:c.a, char:'개념', attrs:['개념']};
+  }
+  if(u.type==='single'){
+    const attr = u.attr;
+    const reverse = Math.random() < 0.34;
+    const P = pool(u.target).filter(function(x){ return !(attr==='strength' && NO_STRENGTH.indexOf(x.char)>=0); });
+    if(!reverse){
+      const cand = P.filter(function(x){ return S.recent.indexOf(x.char)<0; });
+      const it = pick(cand.length?cand:P);
+      return {key:it.char+'|'+attr+'|f', kind:'forward1', char:it.char, attr:attr,
+              answer:it[attr], opts:D.labels[attr].options.slice(), attrs:[attr]};
+    }else{
+      // 해당 값을 가진 자모가 하나뿐인 값(후음 ㅎ, 유음 ㄹ 등)은 역방향 출제에서 뺀다
+      const vals = D.labels[attr].options.filter(function(v){
+        return P.filter(function(x){return x[attr]===v;}).length >= 2; });
+      if(!vals.length){
+        const cand0 = P.filter(function(x){ return S.recent.indexOf(x.char)<0; });
+        const it0 = pick(cand0.length?cand0:P);
+        return {key:it0.char+'|'+attr+'|f', kind:'forward1', char:it0.char, attr:attr,
+                answer:it0[attr], opts:D.labels[attr].options.slice(), attrs:[attr]};
+      }
+      const val = pick(vals);
+      const yes = P.filter(function(x){return x[attr]===val;});
+      const no  = P.filter(function(x){return x[attr]!==val;});
+      const it = pick(yes);
+      const opts = shuffle([it.char].concat(shuffle(no).slice(0,4).map(function(x){return x.char;})));
+      return {key:it.char+'|'+attr+'|r', kind:'reverse1', char:it.char, attr:attr,
+              value:val, answer:it.char, opts:opts, attrs:[attr]};
+    }
+  }
+  if(u.type==='triple'){
+    const P = pool(u.target);
+    const cand = P.filter(function(x){ return S.recent.indexOf(x.char)<0; });
+    const it = pick(cand.length?cand:P);
+    return {key:it.char+'|'+u.uid, kind:'forward3', char:it.char,
+            attrs: attrsOf(it.char), input: u.input, item: it};
+  }
+  // reverse triple (5단계)
+  const P = pool(u.target);
+  const cand = P.filter(function(x){ return S.recent.indexOf(x.char)<0; });
+  const it = pick(cand.length?cand:P);
+  return {key:it.char+'|5', kind:'reverse3', char:it.char, attrs:attrsOf(it.char), item:it};
+}
+
+function nextQuestion(){
+  if(S.correct >= S.setSize){ finishSession(); return; }
+  S.answered=false; S.retryUsed=false;
+  $('q-flash').innerHTML=''; $('q-hint').innerHTML='';
+  $('btn-submit').style.display='block'; $('btn-next-q').style.display='none';
+
+  let q=null;
+  const due = S.pending.filter(function(p){ return p.due<=S.idx; });
+  if(due.length){
+    due.sort(function(a,b){return a.due-b.due;});
+    q = due[0].q;
+    S.pending.splice(S.pending.indexOf(due[0]),1);
+  } else {
+    q = makeQuestion();
+  }
+  S.current = q;
+  S.recent.push(q.char); if(S.recent.length>3) S.recent.shift();
+  renderQuestion(q);
+  updateMetrics();
+  scrollToTop();
+}
+
+function renderQuestion(q){
+  const wrong = S.wrongMap[q.key]||0;
+  $('btn-park').style.display = wrong>=5 ? 'inline-block' : 'none';
+  const area=$('q-card-area'), body=$('q-body');
+  area.innerHTML=''; body.innerHTML='';
+  $('s-learn').classList.toggle('vowq', !!(q.char && byChar[q.char] && isVowel(q.char)));
+  const single = (q.kind==='concept' || q.kind==='forward1' || q.kind==='reverse1');
+  const sb=$('btn-submit');
+  sb.style.display = single ? 'none' : 'block';
+  sb.disabled=false; sb.textContent='확인';
+  const SUB = '<div class="qsub">알맞은 카드를 한 장 내세요</div>';
+
+  if(q.kind==='concept'){
+    $('q-text').innerHTML = q.text;
+    body.innerHTML = SUB + handHTML(q.opts.map(function(o){ return {v:o, m:o, s:''}; }), 'txt');
+    bindSingleSelect(body); layoutHands();
+    return;
+  }
+  if(q.kind==='forward1'){
+    area.innerHTML = cardHTML(q.char);
+    $('q-text').textContent = q.char+'의 '+attrLabel(q.attr)+eun(attrLabel(q.attr))+'?';
+    let opts = q.opts;
+    if(wrong>=5){ const cf=D.confusable[q.answer]; opts=shuffle([q.answer, cf].filter(Boolean)); }
+    body.innerHTML = SUB + handHTML(opts.map(function(o){ return optItem(o); }));
+    bindSingleSelect(body); layoutHands();
+    return;
+  }
+  if(q.kind==='reverse1'){
+    $('q-text').innerHTML = '<b>'+disp(q.value)+'</b>에 해당하는 '+(isVowel(q.char)?'모음':'자음')+'을 고르세요.';
+    body.innerHTML = SUB + handHTML(q.opts.map(function(o){ return {v:o, m:o, s:''}; }), 'jm');
+    bindSingleSelect(body); layoutHands();
+    return;
+  }
+  if(q.kind==='forward3'){
+    if(q.input==='choice'){
+      S.sel3 = {}; S.cur3 = q.attrs[0]; S.opts3 = {};
+      q.attrs.forEach(function(a){
+        let opts=D.labels[a].options.slice();
+        if(wrong>=5){ const cf=D.confusable[q.item[a]]; opts=shuffle([q.item[a],cf].filter(Boolean)); }
+        S.opts3[a]=opts;
+      });
+      area.innerHTML = '<div class="tri-top">'+cardHTML(q.char)+'<div class="slots" id="slots"></div></div>';
+      $('q-text').textContent = q.char+'의 '+numKo(q.attrs.length)+' 가지 특징은?';
+      body.innerHTML = '<div class="tabs" id="tabs"></div><div id="hand3"></div>';
+      drawTriple();
+      return;
+    }
+    area.innerHTML = cardHTML(q.char);
+    $('q-text').textContent = q.char+'의 '+numKo(q.attrs.length)+' 가지 특징을 모두 쓰세요.';
+    body.innerHTML = q.attrs.map(function(a){
+      return '<div class="attrblock" data-attr="'+a+'"><div class="lab">'+attrLabel(a)+'</div>'+
+        '<input type="text" data-in="'+a+'" placeholder="여기에 쓰세요"></div>';
+    }).join('');
+    return;
+  }
+  // reverse3
+  $('q-text').textContent = '다음 특징을 가진 자음 또는 모음은 무엇일까요?';
+  const icons = isVowel(q.char)?ICON_V:ICON_C;
+  body.innerHTML = '<div class="revbox">'+q.attrs.map(function(a,i){
+      const d=splitDisp(disp(q.item[a]));
+      return '<div class="feat"><span class="ic a'+i+'">'+icons[i]+'</span><span><span class="fl">'+attrLabel(a)+'</span>'+
+        '<span class="fv">'+d.m+(d.s?' <small>'+d.s+'</small>':'')+'</span></span></div>';
+    }).join('')+'</div>'+
+    '<input type="text" id="rev-in" placeholder="자음 또는 모음을 쓰세요 (예: ㅅ)">';
+}
+
+/* 3단계(고르기): 빈칸 + 기준별 손패 */
+function drawTriple(){
+  const q=S.current, done=S.answered;
+  $('slots').innerHTML = q.attrs.map(function(a){
+    const v=S.sel3[a], cur=(a===S.cur3 && !done);
+    const cls = (v?' fill':'')+(cur?' cur':'');
+    return '<button class="slot'+cls+'" data-a="'+a+'"><span class="sl-lab">'+attrLabel(a)+'</span>'+
+      '<span class="sl-val">'+(v?splitDisp(disp(v)).m:(cur?'아래에서 카드를 고르세요':'—'))+'</span></button>';
+  }).join('');
+  $('tabs').innerHTML = q.attrs.map(function(a){
+    const cls = a===S.cur3 ? ' on' : (S.sel3[a]?' done':'');
+    return '<button class="tab'+cls+'" data-a="'+a+'">'+(S.sel3[a]?ICON_CHECK:'')+ATTR_SHORT[a]+'</button>';
+  }).join('');
+  $('hand3').innerHTML = handHTML(S.opts3[S.cur3].map(function(o){ return optItem(o, S.sel3[S.cur3]===o); }));
+  if(done) $('hand3').querySelector('.hand').classList.add('done');
+  layoutHands();
+  const pickAttr=function(){ if(S.answered) return; S.cur3=this.getAttribute('data-a'); drawTriple(); };
+  $('slots').querySelectorAll('.slot').forEach(function(b){ b.onclick=pickAttr; });
+  $('tabs').querySelectorAll('.tab').forEach(function(b){ b.onclick=pickAttr; });
+  $('hand3').querySelectorAll('.hcard').forEach(function(b){
+    b.onclick=function(){
+      if(S.answered) return;
+      S.sel3[S.cur3]=b.getAttribute('data-v');
+      const i=q.attrs.indexOf(S.cur3);
+      const order=q.attrs.slice(i+1).concat(q.attrs.slice(0,i));
+      const nx=order.find(function(a){ return !S.sel3[a]; });
+      if(nx) S.cur3=nx;
+      $('q-flash').innerHTML='';
+      drawTriple();
+    };
+  });
+  const n=q.attrs.filter(function(a){ return S.sel3[a]; }).length;
+  const sb=$('btn-submit');
+  const need=q.attrs.length;
+  if(!done){ sb.disabled = n<need; sb.textContent = n<need ? ('고르는 중 · '+n+' / '+need) : '제출하기'; }
+}
+
+function bindSingleSelect(root){
+  root.querySelectorAll('.hcard').forEach(function(b){
+    b.onclick=function(){
+      if(S.answered) return;
+      root.querySelectorAll('.hcard').forEach(function(x){x.classList.remove('sel');});
+      b.classList.add('sel');
+      submit();
+    };
+  });
+}
+function bindMultiSelect(root){
+  root.querySelectorAll('.attrblock').forEach(function(blk){
+    blk.querySelectorAll('.opt').forEach(function(b){
+      b.onclick=function(){
+        blk.querySelectorAll('.opt').forEach(function(x){x.classList.remove('sel');});
+        b.classList.add('sel');
+      };
+    });
+  });
+}
+
+/*==================== 채점 ====================*/
+function submit(){
+  if(S.answered) return;
+  const q=S.current, body=$('q-body');
+  let ok=false, near=false, given=[];
+
+  if(q.kind==='concept' || q.kind==='forward1' || q.kind==='reverse1'){
+    const sel=body.querySelector('.hcard.sel');
+    if(!sel){ flash('bad','답을 하나 고르세요.'); return; }
+    const v=sel.getAttribute('data-v');
+    ok = (v===q.answer); given=[v];
+  }
+  else if(q.kind==='forward3'){
+    const results=[];
+    q.attrs.forEach(function(a){
+      if(q.input==='choice'){
+        const v3=S.sel3[a]||'';
+        results.push({attr:a, val:v3, state: v3 && v3===q.item[a] ? 'exact':'wrong'});
+      }else{
+        const blk=body.querySelector('.attrblock[data-attr="'+a+'"]');
+        const inp=blk.querySelector('input');
+        results.push({attr:a, val:inp.value, state: gradeText(inp.value, q.item[a])});
+      }
+    });
+    if(q.input==='choice' && results.some(function(r){return !r.val;})){ flash('bad',numKo(q.attrs.length)+' 가지를 모두 고르세요.'); return; }
+    given=results.map(function(r){return r.val;});
+    if(results.every(function(r){return r.state==='exact';})) ok=true;
+    else if(!S.retryUsed && results.every(function(r){return r.state!=='wrong';})) near=true;
+  }
+  else { // reverse3
+    const v=normStr($('rev-in').value);
+    if(!v){ flash('bad','답을 쓰세요.'); return; }
+    given=[v]; ok = (v===q.char);
+  }
+
+  if(near){
+    S.retryUsed=true;
+    flash('near','거의 맞았어요. 다시 한 번 써 보세요.');
+    return;
+  }
+
+  S.attempts++;
+  recordDetail(q, given, ok);
+
+  if(ok){
+    S.correct++;
+    S.mastered[q.key]=true;
+    S.pending = S.pending.filter(function(p){ return p.q.key!==q.key; });
+    S.answered=true;
+    flash('good','맞았어요!');
+    if(q.kind==='forward1'||q.kind==='forward3') revealCard(q);
+    updateMetrics();
+    const gate = Math.ceil(S.setSize*2/3);
+    if(S.correct>=S.setSize){ setTimeout(finishSession,700); return; }
+    if(S.correct===gate && S.attempts>0 && (S.correct/S.attempts)>=0.8 && !S.earlyOffered){
+      S.earlyOffered=true;
+      setTimeout(function(){
+        modal('충분히 익혔어요','지금까지 '+S.correct+'문제를 맞혔고, 정답률은 '+Math.round(S.correct/S.attempts*100)+'%입니다.<br>다음 단계로 넘어갈까요?',
+          [{label:'계속하기',fn:showNextBtn},{label:'다음 단계로',main:true,fn:function(){ S.passed=true; finishSession(); }}]);
+      },500);
+      return;
+    }
+    showNextBtn();
+  }else{
+    const w=(S.wrongMap[q.key]||0)+1;
+    S.wrongMap[q.key]=w;
+    markWrong(q);
+    const interval = w>=3?8:(w===2?5:3);
+    S.pending.push({q:q, due:S.idx+interval});
+    S.answered=true;
+    flash('bad','아쉬워요. 다시 생각해 볼까요?');
+    if(w>=3) showHint(q, Math.min(w-2,3));
+    if(w>=5) $('btn-park').style.display='inline-block';
+    updateMetrics();
+    showNextBtn();
+  }
+}
+function showNextBtn(){
+  const cq=S.current;
+  if(cq && cq.kind==='forward3' && cq.input==='choice') drawTriple();
+  document.querySelectorAll('#q-body .hand').forEach(function(h){ h.classList.add('done'); });
+  $('btn-submit').style.display='none';
+  $('btn-next-q').style.display='block';
+}
+function revealCard(q){
+  const card=$('q-card-area').querySelector('.card');
+  if(!card) return;
+  const item = q.item || byChar[q.char];
+  card.insertAdjacentHTML('beforeend', backFace(q.char, item, attrsOf(q.char), q.kind==='forward1'?q.attr:null));
+  setTimeout(function(){ card.classList.add('flip'); },120);
+}
+function flash(kind,msg){ $('q-flash').innerHTML='<div class="flash '+kind+'">'+msg+'</div>'; }
+function showHint(q, level){
+  if(q.kind==='concept') return;   // 개념 문항에는 자모 힌트가 없다
+  let html='';
+  if(q.kind==='forward1'){
+    html = hintText(q.attr, q.answer, q.char, level);
+    if(level>=3) html += '<br>보기를 두 개로 줄였어요.';
+  }else if(q.kind==='reverse1'){
+    html = hintText(q.attr, q.value, '', 2);
+  }else if(q.kind==='forward3'){
+    const bad = q.attrs.filter(function(a){ return (S.wrongInfo[q.char]||{})[a]; });
+    const a = bad.length?bad[0]:q.attrs[0];
+    html = attrLabel(a)+' — '+hintText(a, q.item[a], q.char, level);
+  }else{
+    html = (isVowel(q.char)?'모음':'자음')+'입니다. '+
+      (level>=2 ? hintText(q.attrs[0], q.item[q.attrs[0]], q.char, 2) : '표를 떠올려 보세요.');
+  }
+  if(!html) return;
+  $('q-hint').innerHTML='<div class="hint"><div class="h-lab">힌트 '+level+'</div>'+html+'</div>';
+}
+function markWrong(q){
+  if(q.kind==='concept') return;
+  if(!S.wrongInfo[q.char]) S.wrongInfo[q.char]={};
+  if(q.kind==='forward3'){
+    const body=$('q-body');
+    q.attrs.forEach(function(a){
+      let val='';
+      if(q.input==='choice'){ val=S.sel3[a]||''; }
+      else { val=body.querySelector('.attrblock[data-attr="'+a+'"] input').value; }
+      const okA = q.input==='choice' ? (val===q.item[a]) : (gradeText(val,q.item[a])==='exact');
+      if(!okA) S.wrongInfo[q.char][a]=true;
+    });
+  }else if(q.attr){ S.wrongInfo[q.char][q.attr]=true; }
+  else { q.attrs.forEach(function(a){ S.wrongInfo[q.char][a]=true; }); }
+}
+function recordDetail(q, given, ok){
+  if(q.kind==='concept'){ S.details.push({char:'개념', attr:'개념', answer:given[0]||'', correct:ok, wrongCount:S.wrongMap[q.key]||0}); return; }
+  if(q.kind==='forward3'){
+    q.attrs.forEach(function(a,i){
+      const right = q.input==='choice' ? (given[i]===q.item[a]) : (gradeText(given[i],q.item[a])==='exact');
+      S.details.push({char:q.char, attr:attrLabel(a), answer:given[i]||'', correct:right, wrongCount:S.wrongMap[q.key]||0});
+    });
+    return;
+  }
+  const label = q.kind==='reverse3' ? '자모 맞히기' : attrLabel(q.attr);
+  S.details.push({char:q.char, attr:label, answer:given[0]||'', correct:ok, wrongCount:S.wrongMap[q.key]||0});
+}
+function updateMetrics(){
+  $('m-count').textContent = '맞힌 문제 '+S.correct+' / '+S.setSize;
+  $('m-acc').textContent = S.attempts ? '정답률 '+Math.round(S.correct/S.attempts*100)+'%' : '';
+  $('m-bar').style.width = Math.min(100, S.correct/S.setSize*100)+'%';
+}
+$('btn-submit').onclick=submit;
+/*==================== 스크롤 · 문제 고정 ====================*/
+function topbarH(){ var t=document.querySelector('.topbar'); return t ? t.offsetHeight : 48; }
+function syncTopbarVar(){
+  document.documentElement.style.setProperty('--topbar-h', topbarH()+'px');
+}
+function updateStuck(){
+  var f=$('q-fixed'); if(!f) return;
+  if(!$('s-learn').classList.contains('on')){ f.classList.remove('stuck'); return; }
+  var stuck = f.getBoundingClientRect().top <= topbarH()+1;
+  f.classList.toggle('stuck', stuck);
+}
+function scrollToTop(){
+  try{ window.scrollTo({top:0, behavior:'smooth'}); }
+  catch(e){ window.scrollTo(0,0); }
+  setTimeout(updateStuck, 80);
+  setTimeout(updateStuck, 450);
+}
+window.addEventListener('scroll', updateStuck, {passive:true});
+window.addEventListener('resize', function(){ syncTopbarVar(); updateStuck(); });
+syncTopbarVar();
+updateStuck();
+
+$('btn-next-q').onclick=function(){ S.idx++; nextQuestion(); };
+$('btn-park').onclick=function(){
+  const q=S.current;
+  S.pending = S.pending.filter(function(p){ return p.q.key!==q.key; });
+  if(!S.parked.some(function(x){return x.key===q.key;})) S.parked.push(q);
+  S.idx++; nextQuestion();
+};
+$('btn-quit').onclick=function(){
+  modal('그만할까요?','지금까지 푼 기록은 저장됩니다.',
+    [{label:'계속 풀기'},{label:'그만하기',main:true,fn:finishSession}]);
+};
+
+/*==================== 저장 (실패 시 재시도) ====================*/
+function saveWithRetry(fnName, args, tries){
+  tries = tries||0;
+  const runner = google.script.run
+    .withSuccessHandler(function(){ $('save-note') && ($('save-note').textContent=''); })
+    .withFailureHandler(function(){
+      if(tries < 3){ setTimeout(function(){ saveWithRetry(fnName, args, tries+1); }, 3000*(tries+1)); }
+      else {
+        const n=$('save-note');
+        if(n) n.textContent='기록을 저장하지 못했습니다. 브라우저의 저장 기능이 꺼져 있을 수 있어요.';
+        setTimeout(function(){ saveWithRetry(fnName, args, 0); }, 20000);
+      }
+    });
+  runner[fnName].apply(runner, args);
+}
+
+/*==================== 결과 ====================*/
+function finishSession(){
+  const acc = S.attempts ? S.correct/S.attempts : 0;
+  const done = S.correct>=S.setSize;
+  let msg, pass;
+  if(S.passed){ msg='충분히 익혔어요. 다음 단계로 가세요.'; pass=true; }
+  else if(done && acc>=1){ msg='완벽해요! 다음 단계로 가세요.'; pass=true; }
+  else if(done && acc>=0.8){ msg='잘했어요. 다음 단계로 가도 좋아요.'; pass=true; }
+  else if(done){ msg='한 번 더 연습해 볼까요? 아래에서 틀린 것을 확인하세요.'; pass=false; }
+  else { msg='여기까지 저장했어요. 이어서 다시 할 수 있습니다.'; pass=false; }
+
+  $('r-title').textContent = S.stage.name;
+  $('r-msg').textContent = msg;
+  $('r-stat').textContent = '맞힌 문제 '+S.correct+'개 · 푼 횟수 '+S.attempts+'회 · 정답률 '+Math.round(acc*100)+'%';
+
+  const chars = Object.keys(S.wrongInfo);
+  S.parked.forEach(function(q){ if(q.char && chars.indexOf(q.char)<0) chars.push(q.char); });
+  if(!chars.length){
+    $('r-review').innerHTML = '<h3>다시 볼 것</h3><p class="muted">틀린 문제가 없습니다.</p>';
+  }else{
+    $('r-review').innerHTML = '<h3>이번에 틀렸던 자모</h3>'+chars.map(function(ch){
+      const it=byChar[ch]; if(!it) return '';
+      const at=attrsOf(ch);
+      const wrongAttrs = Object.keys(S.wrongInfo[ch]||{});
+      const a = wrongAttrs.length?wrongAttrs[0]:at[0];
+      const tip = hintText(a, it[a], ch, 2);
+      return '<div style="display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--line)">'+
+        '<div class="jamo sm" style="width:56px;text-align:center">'+ch+'</div><div style="flex:1">'+
+        at.map(function(x){
+          const hit = (S.wrongInfo[ch]||{})[x];
+          return '<div'+(hit?' style="color:var(--warn);font-weight:600"':'')+'>'+attrLabel(x)+' · '+disp(it[x])+'</div>';
+        }).join('')+
+        (tip?'<div class="muted" style="margin-top:4px">'+tip+'</div>':'')+
+        (ch==='ㅇ'?'<div class="muted">ㅇ은 받침(종성)에서만 소리 나는 자음입니다.</div>':'')+
+        '</div></div>';
+    }).join('');
+  }
+
+  const idx = STAGES.findIndex(function(s){return s.id===S.stage.id;});
+  const nx = STAGES[idx+1];
+  $('r-next').style.display = nx?'block':'none';
+  $('r-next').textContent = nx ? ('다음 단계로 ('+nx.name+')') : '';
+  $('r-next').onclick=function(){ if(nx) openStage(nx.id); };
+  $('r-again').onclick=function(){ openStage(S.stage.id); };
+
+  if(!USER.progress) USER.progress={};
+  const prev = USER.progress[S.stage.id]||{tries:0,best:0,passed:false};
+  USER.progress[S.stage.id]={tries:prev.tries+1, best:Math.max(prev.best,acc), passed:prev.passed||pass};
+
+  saveWithRetry('apiSaveStageResult', [USER.id, {
+    stageId:S.stage.id, setSize:S.setSize, correct:S.correct,
+    attempts:S.attempts, accuracy:acc, passed:pass, details:S.details
+  }]);
+  renderHome();
+  go('s-result');
+}
+
+/*==================== 시험 ====================*/
+function startExamIntro(){
+  $('exam-intro').style.display='block';
+  $('exam-run').style.display='none';
+  $('exam-done').style.display='none';
+  go('s-exam');
+}
+function sampleExam(exclude){
+  function filt(arr, fn){
+    let a=arr.filter(fn);
+    const b=a.filter(function(x){return exclude.indexOf(x.char)<0;});
+    return b.length?b:a;
+  }
+  const q1=pick(filt(CONS,function(c){return ['연구개음','경구개음'].indexOf(c.position)>=0 && ['파열음','파찰음'].indexOf(c.method)>=0;}));
+  const q2=pick(filt(CONS,function(c){return c.position==='치조음' && ['마찰음','유음'].indexOf(c.method)>=0;}));
+  const q3=pick(filt(CONS,function(c){return ['순음','후음'].indexOf(c.position)>=0 && ['비음','마찰음'].indexOf(c.method)>=0;}));
+  const q4=pick(filt(VOW,function(v){return v.frontback==='전설모음';}));
+  const q5=pick(filt(VOW,function(v){return v.frontback==='후설모음' && v.height!==q4.height;}));
+  const items=[q1,q2,q3,q4,q5].map(function(it,i){
+    return {no:i+1, item:it, char:it.char, target:isVowel(it.char)?'모음':'자음',
+            attrs:attrsOf(it.char), ox:attrsOf(it.char).map(function(){return null;})};
+  });
+  return shuffle(items);
+}
+$('ex-start').onclick=function(){
+  google.script.run.withSuccessHandler(function(r){
+    EX={items:sampleExam(r.chars||[]), i:0, round:(r.round||0)+1};
+    $('exam-intro').style.display='none';
+    $('exam-run').style.display='block';
+    drawExam();
+  }).withFailureHandler(function(){
+    EX={items:sampleExam([]), i:0, round:1};
+    $('exam-intro').style.display='none'; $('exam-run').style.display='block'; drawExam();
+  }).apiGetLastExamChars(USER.id);
+};
+function drawExam(){
+  const it=EX.items[EX.i];
+  $('ex-count').textContent=(EX.i+1)+' / '+EX.items.length+'문제';
+  $('ex-bar').style.width=((EX.i)/EX.items.length*100)+'%';
+  $('ex-card').className='card big '+kindCls(it.char);
+  $('ex-card').innerHTML=frontFace(it.char)+backFace(it.char, it.item, it.attrs, null);
+  $('ex-ox').innerHTML=it.attrs.map(function(a,k){
+    return '<div class="examrow"><div class="lab">'+attrLabel(a)+'</div>'+
+      '<div class="ox" style="flex:1"><button class="o" data-k="'+k+'" data-v="1">O</button>'+
+      '<button class="x" data-k="'+k+'" data-v="0">X</button></div></div>';}).join('');
+  $('ex-ox').querySelectorAll('button').forEach(function(b){
+    b.onclick=function(){
+      const k=+b.getAttribute('data-k'), v=b.getAttribute('data-v')==='1';
+      it.ox[k]=v;
+      $('ex-ox').querySelectorAll('button[data-k="'+k+'"]').forEach(function(x){x.classList.remove('on');});
+      b.classList.add('on');
+    };
+  });
+}
+$('ex-reveal').onclick=function(){ $('ex-card').classList.toggle('flip'); };
+$('ex-next').onclick=function(){
+  const it=EX.items[EX.i];
+  if(it.ox.some(function(v){return v===null;})){
+    modal('채점이 덜 됐어요','모든 기준에 O 또는 X를 눌러 주세요.',[{label:'확인',main:true}]); return;
+  }
+  if(EX.i<EX.items.length-1){ EX.i++; drawExam(); scrollToTop(); return; }
+  finishExam();
+};
+function finishExam(){
+  const rows=EX.items.map(function(it){
+    return {no:it.no, char:it.char, target:it.target,
+      a1:attrLabel(it.attrs[0]), o1:it.ox[0],
+      a2:attrLabel(it.attrs[1]), o2:it.ox[1],
+      a3:it.attrs[2]?attrLabel(it.attrs[2]):'-', o3:it.attrs[2]?it.ox[2]:true,
+      correct: it.ox.every(Boolean)};
+  });
+  const score=rows.filter(function(r){return r.correct;}).length;
+  $('exam-run').style.display='none';
+  $('exam-done').style.display='block';
+  $('ex-score').textContent='5문제 중 '+score+'문제를 맞혔습니다.';
+  $('ex-detail').innerHTML='<table><tr><th>자모</th><th>기준</th><th class="c">결과</th></tr>'+
+    EX.items.map(function(it){
+      return it.attrs.map(function(a,k){
+        return '<tr>'+(k===0?'<td rowspan="'+it.attrs.length+'" style="font-size:1.6rem;font-weight:700">'+it.char+'</td>':'')+
+          '<td>'+attrLabel(a)+' · '+disp(it.item[a])+'</td>'+
+          '<td class="c" style="color:'+(it.ox[k]?'var(--good)':'var(--warn)')+';font-weight:700">'+(it.ox[k]?'O':'X')+'</td></tr>';
+      }).join('');
+    }).join('')+'</table>';
+  if(!USER.progress) USER.progress={};
+  USER.progress['exam']={tries:1,best:score/5,passed:true};
+  saveWithRetry('apiSaveExam', [USER.id, {round:EX.round, items:rows}]);
+  renderHome();
+}
+
+</script>
+</body>
+</html>
