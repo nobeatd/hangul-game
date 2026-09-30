@@ -186,8 +186,9 @@ label{display:block;font-size:.9rem;color:var(--sub);margin-bottom:4px}
 #q-fixed{
   position:sticky; top:var(--topbar-h,48px); z-index:12;
   background:var(--panel); margin:0 -16px; padding:0 16px;
-  transition:padding .18s ease;
+  overflow-anchor:none;
 }
+#q-sentinel,#q-spacer{height:0;margin:0;padding:0}
 #q-fixed.stuck{
   padding-top:8px; padding-bottom:10px;
   border-bottom:1px solid var(--line);
@@ -411,10 +412,12 @@ body.opening .wrap{max-width:none;padding:0}
   </div>
 
   <div class="panel">
+    <div id="q-sentinel" aria-hidden="true"></div>
     <div id="q-fixed">
       <div id="q-card-area"></div>
       <div class="qtext" id="q-text"></div>
     </div>
+    <div id="q-spacer" aria-hidden="true"></div>
     <div id="q-body"></div>
     <div id="q-flash"></div>
     <div id="q-hint"></div>
@@ -1286,19 +1289,45 @@ function topbarH(){ var t=document.querySelector('.topbar'); return t ? t.offset
 function syncTopbarVar(){
   document.documentElement.style.setProperty('--topbar-h', topbarH()+'px');
 }
-function updateStuck(){
-  var f=$('q-fixed'); if(!f) return;
-  if(!$('s-learn').classList.contains('on')){ f.classList.remove('stuck'); return; }
-  var stuck = f.getBoundingClientRect().top <= topbarH()+1;
-  f.classList.toggle('stuck', stuck);
+/* v8: 떨림 수정
+   - 고정 여부를 #q-fixed 자신이 아니라 바로 앞의 #q-sentinel 위치로 판단한다
+     (고정 영역 크기가 바뀌어도 판단 기준이 흔들리지 않음).
+   - 고정되며 줄어든 높이만큼 #q-spacer(빈 칸)로 채워, 아래 선택지 위치와
+     페이지 전체 높이가 변하지 않게 한다(스크롤 보정·끝부분 스크롤 되돌림 방지). */
+function _refTop(){ var r=$('q-spacer').nextElementSibling; return r ? r.getBoundingClientRect().top + window.scrollY : 0; }
+function unstick(f){ f.classList.remove('stuck'); $('q-spacer').style.height=''; }
+function stick(f){
+  var sp=$('q-spacer'), y=window.scrollY;
+  unstick(f);
+  var before=_refTop();              // 고정 전 선택지 위치(문서 기준)
+  var big=f.offsetHeight;            // 줄어드는 양의 최대치 — 먼저 넉넉히 채워 페이지가 짧아지지 않게
+  sp.style.height=big+'px';
+  f.classList.add('stuck');
+  var h=big-(_refTop()-before);      // 남는 만큼 덜어 냄(여백 겹침까지 반영)
+  sp.style.height=Math.max(0,h)+'px';
+  if(window.scrollY!==y) window.scrollTo(0,y);
 }
+function updateStuck(){
+  var f=$('q-fixed'), s=$('q-sentinel'); if(!f||!s) return;
+  if(!$('s-learn').classList.contains('on')){ unstick(f); return; }
+  var want = s.getBoundingClientRect().top < topbarH();
+  if(want!==f.classList.contains('stuck')){ want ? stick(f) : unstick(f); }
+}
+/* 고정된 상태에서 문제 내용이 바뀌면 보정 높이를 다시 잰다 */
+var _stkBusy=false;
+new MutationObserver(function(){
+  var f=$('q-fixed'); if(_stkBusy||!f||!f.classList.contains('stuck')) return;
+  _stkBusy=true; stick(f); _stkBusy=false;
+}).observe($('q-fixed'),{childList:true,subtree:true,characterData:true});
+var _stkRaf=0;
+function onScrollStuck(){ if(_stkRaf) return; _stkRaf=requestAnimationFrame(function(){ _stkRaf=0; updateStuck(); }); }
 function scrollToTop(){
   try{ window.scrollTo({top:0, behavior:'smooth'}); }
   catch(e){ window.scrollTo(0,0); }
   setTimeout(updateStuck, 80);
   setTimeout(updateStuck, 450);
 }
-window.addEventListener('scroll', updateStuck, {passive:true});
+window.addEventListener('scroll', onScrollStuck, {passive:true});
 window.addEventListener('resize', function(){ syncTopbarVar(); updateStuck(); });
 syncTopbarVar();
 updateStuck();
