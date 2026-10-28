@@ -884,6 +884,34 @@ $('cp-next').onclick=function(){
 
 /*==================== 채점 도구 ====================*/
 function normStr(s){ return String(s==null?'':s).replace(/\s/g,'').trim(); }
+/* 태블릿 키보드는 홀로 쓰는 모음을 합치지 못해 ㅚ를 ㅗㅣ로, ㅟ를 ㅜㅣ로 쓰거나,
+   첫가끝 자모(U+1100대)를 내보내기도 한다. 모두 호환용 자모 ㅚ·ㅟ로 바꾼다. */
+const CHO_COMPAT = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+function toCompatJamo(s){
+  return String(s).replace(/[ᄀ-하-ᅵ]/g, function(c){
+    const n=c.charCodeAt(0);
+    return n<=0x1112 ? CHO_COMPAT.charAt(n-0x1100) : String.fromCharCode(n-0x1161+0x314F);
+  });
+}
+function combineVowels(s){ return toCompatJamo(s).replace(/ㅗㅣ/g,'ㅚ').replace(/ㅜㅣ/g,'ㅟ'); }
+function normJamo(s){ return combineVowels(normStr(s)); }
+/** 입력 칸에서 ㅗㅣ·ㅜㅣ를 바로 ㅚ·ㅟ로 합쳐 보여 준다 (글자 조합 중에는 건드리지 않는다) */
+function bindJamoInput(el){
+  function fix(){
+    const v=el.value, nv=combineVowels(v); if(nv===v) return;
+    const pos = el.selectionStart==null ? v.length : el.selectionStart;
+    const at = combineVowels(v.slice(0,pos)).length;
+    el.value=nv; try{ el.setSelectionRange(at,at); }catch(e){}
+  }
+  el.addEventListener('input', function(e){ if(!e.isComposing) fix(); });
+  el.addEventListener('compositionend', function(){ setTimeout(fix,0); });
+  el.addEventListener('blur', fix);
+}
+/** 세기 '구분없음' 정답: 빈칸, '세기에 따른 구분 없음', '없어요'처럼 '없다'는 뜻이면 인정한다 */
+function isNoneAnswer(v){
+  if(!v) return true;
+  return /없|안됨|아님/.test(v) || ['-','x','X','×'].indexOf(v)>=0;
+}
 function lev(a,b){
   const m=a.length,n=b.length; if(Math.abs(m-n)>1) return 2;
   const dp=Array.from({length:m+1},function(_,i){return [i].concat(new Array(n).fill(0));});
@@ -903,6 +931,9 @@ function findCategory(v){
 /** 'exact' | 'near' | 'wrong' */
 function gradeText(input, correctCat){
   const v = normStr(input);
+  if(correctCat==='구분없음'){
+    if(isNoneAnswer(v)) return 'exact';
+  }
   if(!v) return 'wrong';
   const cat = findCategory(v);
   if(cat===correctCat) return 'exact';
@@ -1079,6 +1110,7 @@ function renderQuestion(q){
         '<span class="fv">'+d.m+(d.s?' <small>'+d.s+'</small>':'')+'</span></span></div>';
     }).join('')+'</div>'+
     '<input type="text" id="rev-in" placeholder="자음 또는 모음을 쓰세요 (예: ㅅ)">';
+  bindJamoInput($('rev-in'));
 }
 
 /* 3단계(고르기): 빈칸 + 기준별 손패 */
@@ -1169,7 +1201,7 @@ function submit(){
     else if(!S.retryUsed && results.every(function(r){return r.state!=='wrong';})) near=true;
   }
   else { // reverse3
-    const v=normStr($('rev-in').value);
+    const v=normJamo($('rev-in').value);
     if(!v){ flash('bad','답을 쓰세요.'); return; }
     given=[v]; ok = (v===q.char);
   }
