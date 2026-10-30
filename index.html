@@ -1487,8 +1487,13 @@ function drawExam(){
   const it=EX.items[EX.i];
   $('ex-count').textContent=(EX.i+1)+' / '+EX.items.length+'문제';
   $('ex-bar').style.width=((EX.i)/EX.items.length*100)+'%';
-  $('ex-card').className='card big '+kindCls(it.char);
-  $('ex-card').innerHTML=frontFace(it.char)+backFace(it.char, it.item, it.attrs, null);
+  // 앞면으로 되돌릴 때 뒤집히는 애니메이션이 보이면 다음 문제의 정답이 잠깐 드러나므로 애니메이션 없이 바꾼다
+  const card=$('ex-card');
+  card.style.transition='none';
+  card.className='card big '+kindCls(it.char);
+  card.innerHTML=frontFace(it.char)+backFace(it.char, it.item, it.attrs, null);
+  void card.offsetWidth; card.style.transition='';
+  $('ex-next').textContent='다음 문제 →';
   $('ex-ox').innerHTML=it.attrs.map(function(a,k){
     return '<div class="examrow"><div class="lab">'+attrLabel(a)+'</div>'+
       '<div class="ox" style="flex:1"><button class="o" data-k="'+k+'" data-v="1">O</button>'+
@@ -1507,6 +1512,13 @@ $('ex-next').onclick=function(){
   const it=EX.items[EX.i];
   if(it.ox.some(function(v){return v===null;})){
     modal('채점이 덜 됐어요','모든 기준에 O 또는 X를 눌러 주세요.',[{label:'확인',main:true}]); return;
+  }
+  // 처음 누르면 카드를 뒤집어 정답을 보여 주고, 한 번 더 누르면 다음 문제로 넘어간다
+  const card=$('ex-card');
+  if(!card.classList.contains('flip')){
+    card.classList.add('flip');
+    $('ex-next').textContent = EX.i<EX.items.length-1 ? '다음 문제 →' : '결과 보기 →';
+    return;
   }
   if(EX.i<EX.items.length-1){ EX.i++; drawExam(); scrollToTop(); return; }
   finishExam();
